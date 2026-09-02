@@ -49,8 +49,16 @@
 {% endblock %}
 {% block content %}
 <article class="article-detail wrap">
-  {% with ad=ad_slots.get('article_left_1'), ad_context='ad-slot-side ad-slot-left' %}{% include "_ad_slot.html" %}{% endwith %}
-  {% with ad=ad_slots.get('article_right_1'), ad_context='ad-slot-side ad-slot-right' %}{% include "_ad_slot.html" %}{% endwith %}
+  <div class="article-side-rail article-side-rail-left" aria-label="기사 왼쪽 광고">
+    {% for slot_key in ('article_left_1', 'article_left_2') %}
+      {% with ad=ad_slots.get(slot_key), ad_context='ad-slot-side ad-slot-left ad-slot-sequence-' ~ loop.index %}{% include "_ad_slot.html" %}{% endwith %}
+    {% endfor %}
+  </div>
+  <div class="article-side-rail article-side-rail-right" aria-label="기사 오른쪽 광고">
+    {% for slot_key in ('article_right_1', 'article_right_2') %}
+      {% with ad=ad_slots.get(slot_key), ad_context='ad-slot-side ad-slot-right ad-slot-sequence-' ~ loop.index %}{% include "_ad_slot.html" %}{% endwith %}
+    {% endfor %}
+  </div>
   {% if article.status == 'published' %}
   <nav class="breadcrumb">
     <a href="{{ url_for('index') }}">홈</a>
@@ -117,8 +125,6 @@
   {% endif %}
 
   <div class="body">{{ render_article_body(article.id, article.body) }}</div>
-  {% with ad=ad_slots.get('article_left_2'), ad_context='ad-slot-side ad-slot-left ad-slot-midpoint' %}{% include "_ad_slot.html" %}{% endwith %}
-  {% with ad=ad_slots.get('article_right_2'), ad_context='ad-slot-side ad-slot-right ad-slot-midpoint' %}{% include "_ad_slot.html" %}{% endwith %}
 
   {% if article_tags %}
   <div class="tag-list">

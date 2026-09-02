@@ -120,5 +120,71 @@ document.addEventListener("change", function (e) {
   if (!file || !preview) return;
   const reader = new FileReader();
   reader.onload = function () { preview.innerHTML = '<img src="' + reader.result + '" alt="선택한 프로필 사진 미리보기">'; };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
 });
+
+// 이미지 업로드: 파일 선택뿐 아니라 클립보드 이미지를 Ctrl/Cmd+V로 넣을 수 있습니다.
+(function () {
+  function imageInputs(scope) {
+    return Array.from((scope || document).querySelectorAll('input[type="file"]')).filter(function (input) {
+      return (input.accept || "").toLowerCase().indexOf("image") !== -1 && !input.disabled;
+    });
+  }
+  function setFiles(input, files) {
+    if (!input || !files.length || typeof DataTransfer === "undefined") return;
+    var transfer = new DataTransfer();
+    if (input.multiple && input.files) Array.from(input.files).forEach(function (file) { transfer.items.add(file); });
+    files.forEach(function (file) { transfer.items.add(file); });
+    input.files = transfer.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function status(input, text, error) {
+    var parent = input.parentElement;
+    if (!parent) return;
+    var node = parent.querySelector("[data-clipboard-status]");
+    if (!node) { node = document.createElement("small"); node.setAttribute("data-clipboard-status", "true"); node.className = "clipboard-upload-status"; parent.appendChild(node); }
+    node.textContent = text;
+    node.classList.toggle("is-error", !!error);
+  }
+  function preview(input, file) {
+    if (!file || !file.type || file.type.indexOf("image/") !== 0) return;
+    var form = input.closest("form");
+    var box = form && form.querySelector(".profile-photo-preview, .current-image-preview");
+    if (!box) return;
+    var reader = new FileReader();
+    reader.onload = function () { box.innerHTML = '<img src="' + reader.result + '" alt="선택한 이미지 미리보기">'; };
+    reader.readAsDataURL(file);
+  }
+  document.addEventListener("paste", function (event) {
+    var items = event.clipboardData && event.clipboardData.items;
+    if (!items) return;
+    var files = Array.from(items).filter(function (item) { return item.kind === "file" && item.type.indexOf("image/") === 0; }).map(function (item) { return item.getAsFile(); }).filter(Boolean);
+    if (!files.length) return;
+    var active = document.activeElement;
+    var input = active && active.matches && active.matches('input[type="file"]') ? active : null;
+    if (!input) { var form = active && active.closest ? active.closest("form") : null; input = imageInputs(form)[0] || imageInputs(document)[0]; }
+    if (!input) return;
+    event.preventDefault();
+    setFiles(input, files);
+    preview(input, files[0]);
+    status(input, files.length > 1 ? files.length + "개 이미지를 붙여넣었습니다." : "이미지를 붙여넣었습니다.", false);
+  });
+  document.addEventListener("change", function (event) {
+    var input = event.target;
+    if (!input.matches || !input.matches('input[type="file"]') || !input.files.length) return;
+    preview(input, input.files[0]);
+    status(input, input.files.length > 1 ? input.files.length + "개 이미지를 선택했습니다." : "이미지를 선택했습니다.", false);
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    imageInputs(document).forEach(function (input) {
+      if (input.parentElement.querySelector("[data-clipboard-hint]")) return;
+      var hint = document.createElement("small");
+      hint.setAttribute("data-clipboard-hint", "true");
+      hint.className = "clipboard-upload-hint";
+      hint.textContent = "이미지를 선택하거나 Ctrl/Cmd+V로 붙여넣으세요.";
+      input.parentElement.appendChild(hint);
+    });
+  });
+})();
+
+
