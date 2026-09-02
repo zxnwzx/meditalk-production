@@ -101,14 +101,14 @@ document.addEventListener("submit", function (e) {
   if (submit) submit.disabled = true;
   if (label) label.hidden = true;
   if (loading) loading.hidden = false;
-  if (status) { status.textContent = "구독 정보를 확인하고 있습니다…"; status.className = "newsletter-status is-loading"; }
+  if (status) { status.textContent = "확인 중…"; status.className = "newsletter-status is-loading"; }
   fetch(form.action, { method: "POST", body: new FormData(form), headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" } })
-    .then(function (response) { return response.json().then(function (data) { return { ok: response.ok && data.ok, message: data.message || "처리 중 오류가 발생했습니다." }; }); })
+    .then(function (response) { return response.json().then(function (data) { return { ok: response.ok && data.ok, message: data.message || "오류가 발생했습니다." }; }); })
     .then(function (result) {
       if (status) { status.textContent = result.message; status.className = "newsletter-status " + (result.ok ? "is-success" : "is-error"); }
       if (result.ok) { form.querySelector("input[name=email]").value = ""; form.querySelectorAll("input[name=categories]").forEach(function (input) { input.checked = false; }); }
     })
-    .catch(function () { if (status) { status.textContent = "잠시 후 다시 시도해 주세요."; status.className = "newsletter-status is-error"; } })
+    .catch(function () { if (status) { status.textContent = "다시 시도해 주세요."; status.className = "newsletter-status is-error"; } })
     .finally(function () { if (submit) submit.disabled = false; if (label) label.hidden = false; if (loading) loading.hidden = true; });
 });
 
