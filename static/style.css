@@ -1368,13 +1368,20 @@ h1,h2,h3,h4,h5,h6,.logo,.logo-wordmark,.tagline,.hero-headline,.article-detail h
     white-space:nowrap;
   }
   .util-right > a[href*="login"]{
+    width:72px;
+    min-width:72px;
+    padding-left:0;
+    padding-right:0;
     border:1px solid rgba(255,255,255,.28);
     background:rgba(255,255,255,.05);
     color:#eaf5ff;
     opacity:1;
   }
   .util-right > .btn-subscribe{
+    width:72px;
     min-width:72px;
+    padding-left:0;
+    padding-right:0;
     border:1px solid rgba(108,190,255,.45);
     background:linear-gradient(135deg,#258fe2,#1165b8) !important;
     box-shadow:0 4px 12px rgba(4,77,143,.3);
