@@ -1,0 +1,10 @@
+{% if ad and ad.is_active %}
+<aside class="ad-slot {{ ad_context|default('') }}" aria-label="{{ ad.name }} 광고">
+  <a class="ad-slot-link" href="{{ url_for('ad_click', campaign_id=ad.id, slot_key=ad.slot_key) }}" rel="sponsored noopener" target="_blank">
+    <span class="ad-slot-meta"><span>AD</span>{{ ad.name }} · {{ ad.recommended_size }}</span>
+    <img src="{{ image_url(ad.image_filename) }}" alt="{{ ad.sponsor or ad.name }} 광고" loading="lazy">
+    <span class="ad-slot-placement">{{ ad.placement }}</span>
+  </a>
+  <img class="ad-impression-pixel" src="{{ url_for('ad_impression', campaign_id=ad.id, slot_key=ad.slot_key) }}" alt="" aria-hidden="true">
+</aside>
+{% endif %}

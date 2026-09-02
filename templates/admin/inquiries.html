@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% block title %}광고·제휴 문의 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>광고·제휴 문의함</h1>
+  <a href="{{ url_for('admin_backup') }}" class="btn btn-outline">DB 백업 다운로드</a>
+</div>
+
+{% if inquiries %}
+{% for i in inquiries %}
+<div class="admin-card">
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+    <div>
+      <strong>{{ i.name }}</strong>{% if i.company %} · {{ i.company }}{% endif %}
+      <div class="helptext">{{ i.email }}</div>
+    </div>
+    <div class="helptext">{{ i.created_at }}</div>
+  </div>
+  <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;white-space:pre-line;">{{ i.message }}</p>
+</div>
+{% endfor %}
+{% else %}
+<div class="admin-empty">아직 접수된 문의가 없습니다.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ '기사 수정' if article else '새 기사 작성' }} | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>{{ '기사 수정' if article else '새 기사 작성' }}</h1>
+  {% if article %}<span class="status-pill status-{{ article.status }}">{{ status_label(article.status) }}</span>{% endif %}
+</div>
+
+{% if article and article.status == 'rejected' and article.review_note %}
+<div class="reject-note-box" style="margin-bottom:20px;">
+  <strong>편집장 반려 사유</strong>
+  <p>{{ article.review_note }}</p>
+</div>
+{% endif %}
+
+<form method="post" class="admin-card" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% if article %}<input type="hidden" name="_version" value="{{ article.updated_at }}">{% endif %}
+  <div class="field">
+    <label for="title">제목</label>
+    <input type="text" id="title" name="title" required value="{{ article.title if article else '' }}" placeholder="예: 한서바이오, 3세대 표적항암제 국내 3상 신청">
+  </div>
+  <div class="field">
+    <label for="category">섹션</label>
+    <select id="category" name="category" required>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {{ 'selected' if article and article.category==cat else '' }}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="deck">부제 / 요약 (기사 목록·홈페이지에 노출)</label>
+    <textarea id="deck" name="deck" rows="2" required placeholder="한 문단 요약을 입력하세요.">{{ article.deck if article else '' }}</textarea>
+  </div>
+  <div class="field">
+    <label for="image">대표 이미지 (선택, jpg/png/webp/gif, 6MB 이하)</label>
+    {% if article and article.image_filename %}
+    <div class="current-image-preview">
+      <img src="{{ image_url(article.image_filename) }}" alt="현재 대표 이미지">
+      <label class="remove-image-label">
+        <input type="checkbox" name="remove_image" value="1"> 이 이미지 삭제
+      </label>
+    </div>
+    {% endif %}
+    <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+    <div class="helptext">새 이미지를 올리면 기존 이미지는 자동으로 교체됩니다. 업로드 시 자동으로 리사이즈되고 위치정보 등 메타데이터는 제거됩니다.</div>
+  </div>
+  <div class="field">
+    <label for="image_caption">이미지 설명 (선택)</label>
+    <input type="text" id="image_caption" name="image_caption" value="{{ article.image_caption if article and article.image_caption else '' }}" placeholder="예: OO바이오 연구소 전경">
+  </div>
+  <div class="field">
+    <label for="tags">태그 (쉼표로 구분, 최대 8개)</label>
+    <input type="text" id="tags" name="tags" value="{{ current_tags if current_tags is defined else '' }}" placeholder="예: GLP-1, 임상3상, 식약처">
+    <div class="helptext">기사 하단과 태그별 모아보기 페이지에 노출됩니다.</div>
+  </div>
+  <fieldset class="editor-documents">
+    <legend>출처·근거 문서 <span>선택, 최대 5개</span></legend>
+    <p class="helptext">공시, 논문, 식약처 고시처럼 독자가 확인할 수 있는 공개 문서 링크를 붙입니다.</p>
+    {% for i in range(5) %}<div class="document-row"><input name="document_label" maxlength="100" value="{{ documents[i].label if documents and i < documents|length else '' }}" placeholder="문서명"><input name="document_url" type="url" maxlength="500" value="{{ documents[i].url if documents and i < documents|length else '' }}" placeholder="https://..."></div>{% endfor %}
+  </fieldset>
+  {% if user.role == 'editor' %}
+  <fieldset class="editor-checklist"><legend>발행 전 체크리스트</legend><p class="helptext">발행 책임을 명확히 하기 위한 내부 확인 항목입니다.</p><div>{% set check = checklist or {} %}{% for key, label in [('source_verified','출처·수치 확인'),('conflicts_reviewed','이해상충 검토'),('seo_reviewed','제목·설명·SEO 확인'),('rights_confirmed','이미지·인용 권리 확인')] %}<label><input type="checkbox" name="{{ key }}" value="1" {{ 'checked' if check[key] else '' }}><span>{{ label }}</span></label>{% endfor %}</div></fieldset>
+  {% set trans = transparency or {} %}
+  <fieldset class="editor-transparency"><legend>취재·검증 정보 <span>독자 공개</span></legend><p class="helptext">기사의 형식과 취재 방식, 한계와 이해상충을 명확히 표시합니다.</p><div class="transparency-grid"><label>기사 유형<select name="report_type"><option value="news" {{ 'selected' if trans and trans.report_type == 'news' else '' }}>뉴스</option><option value="analysis" {{ 'selected' if trans and trans.report_type == 'analysis' else '' }}>분석</option><option value="opinion" {{ 'selected' if trans and trans.report_type == 'opinion' else '' }}>오피니언</option></select></label><label>취재·검증 방식<textarea name="reporting_method" rows="2" maxlength="800" placeholder="예: 공개 공시·논문 검토 및 업계 관계자 인터뷰">{{ trans.reporting_method if trans else '' }}</textarea></label><label>불확실성·한계<textarea name="uncertainty_note" rows="2" maxlength="800" placeholder="예: 추가 데이터가 공개되면 내용이 달라질 수 있습니다.">{{ trans.uncertainty_note if trans else '' }}</textarea></label><label>이해상충 고지<textarea name="conflict_note" rows="2" maxlength="500" placeholder="없음 또는 관련 관계를 명시합니다.">{{ trans.conflict_note if trans else '' }}</textarea></label></div></fieldset>
+  {% endif %}
+  <div class="field">
+    <label for="body">본문</label>
+    <textarea id="body" name="body" rows="16" required placeholder="기사 본문을 입력하세요. 빈 줄로 문단을 구분합니다.">{{ article.body if article else '' }}</textarea>
+    <div class="helptext">빈 줄로 문단을 구분해서 작성하면 기사 페이지에 그대로 반영됩니다. 본문 이미지를 넣고 싶은 위치에 <code>[[이미지1]]</code>, <code>[[이미지2]]</code> 처럼 적어주세요.</div>
+  </div>
+
+  <div class="field">
+    <label>본문 삽입 이미지 (선택, 최대 8장)</label>
+    {% if body_images %}
+    <div class="body-images-current">
+      {% for bi in body_images %}
+      <div class="body-image-chip">
+        <img src="{{ image_url(bi.filename) }}" alt="본문 이미지 {{ bi.position }}">
+        <span>[[이미지{{ bi.position }}]]{% if bi.caption %} · {{ bi.caption }}{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <label class="remove-image-label">
+      <input type="checkbox" name="remove_body_images" value="1"> 위 본문 이미지 전부 삭제
+    </label>
+    {% endif %}
+    <input type="file" id="body_images" name="body_images" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+    <div class="helptext">여러 장을 한 번에 선택하면 선택한 순서대로 [[이미지1]], [[이미지2]]... 번호가 매겨집니다. 새로 올리면 기존 본문 이미지 전체가 교체됩니다.</div>
+    <input type="text" name="body_image_caption" placeholder="이미지1 설명(선택)" style="margin-top:8px;">
+    <input type="text" name="body_image_caption" placeholder="이미지2 설명(선택)" style="margin-top:6px;">
+    <input type="text" name="body_image_caption" placeholder="이미지3 설명(선택)" style="margin-top:6px;">
+  </div>
+
+  {% if user.role == 'editor' %}
+  <div class="field">
+    <label for="related_ids">관련기사 직접 지정 (선택, 최대 3개 — 지정 안 하면 같은 섹션 최신 기사로 자동 표시)</label>
+    <select id="related_ids" name="related_ids" multiple size="6">
+      {% for r in recent_published %}
+      <option value="{{ r.id }}" {{ 'selected' if r.id in (related_current or []) else '' }}>#{{ r.id }} · {{ r.title }}</option>
+      {% endfor %}
+    </select>
+    <div class="helptext">Ctrl(Mac은 Cmd)을 누른 채 클릭하면 여러 개를 고를 수 있습니다.</div>
+  </div>
+  {% endif %}
+
+  {% if user.role == 'editor' and not (article and article.status == 'published') %}
+  <div class="field">
+    <label for="scheduled_at">예약 발행 시각 (아래 "예약 발행" 버튼을 누를 때만 사용됩니다)</label>
+    <div class="preset-row">
+      <button type="button" class="btn btn-outline btn-sm" data-preset="1h">1시간 후</button>
+      <button type="button" class="btn btn-outline btn-sm" data-preset="3h">3시간 후</button>
+      <button type="button" class="btn btn-outline btn-sm" data-preset="tonight">오늘 저녁 6시</button>
+      <button type="button" class="btn btn-outline btn-sm" data-preset="tomorrow9">내일 오전 9시</button>
+      <button type="button" class="btn btn-outline btn-sm" data-preset="tomorrow-morning">내일 오전 6시(조간)</button>
+    </div>
+    <input type="hidden" id="scheduled_at" name="scheduled_at" value="{{ (article.scheduled_at | replace(' ', 'T')) if article and article.scheduled_at else '' }}">
+    <div class="schedule-manual" aria-label="수동 예약 발행 시각">
+      <div><label for="scheduled_month_day">월·일</label><input id="scheduled_month_day" name="scheduled_month_day" type="text" inputmode="numeric" maxlength="5" pattern="\d{2}-\d{2}" placeholder="09-01" aria-describedby="scheduled_manual_help"></div>
+      <div><label for="scheduled_time">시각</label><input id="scheduled_time" name="scheduled_time" type="time" aria-describedby="scheduled_manual_help"></div>
+    </div>
+    <div id="scheduled_manual_help" class="helptext">수동 입력은 올해의 월·일과 시각만 설정합니다.</div>
+    <div class="helptext">지정한 시각이 되면 서버가 자동으로 발행 처리합니다 (한국 시간(KST) 기준, 최대 5초 오차).</div>
+  </div>
+  {% endif %}
+  <div class="row-actions">
+  {% if article and article.status == 'published' %}
+      <div class="field"><label for="change_note">수정 메모 (선택)</label><input id="change_note" name="change_note" maxlength="300" placeholder="예: 수치 출처 업데이트"></div>
+      {% if user.role == 'editor' %}<fieldset class="public-correction"><legend>독자용 공개 정정 <span>필요한 수정에만 사용</span></legend><label><input type="checkbox" name="publish_correction" value="1"> 이 수정 내용을 기사 하단의 정정 이력에 공개합니다.</label><input name="correction_summary" maxlength="300" placeholder="수정 요약 예: 임상 단계 표기를 2상으로 정정"><textarea name="correction_detail" rows="2" maxlength="1000" placeholder="수정 사유와 독자가 알아야 할 변경 내용을 설명합니다."></textarea></fieldset>{% endif %}
+      <button class="btn" type="submit" name="action" value="save">수정 내용 저장 (발행 상태 유지)</button>
+    {% elif user.role == 'editor' %}
+      <button class="btn btn-outline" type="submit" name="action" value="save">임시저장</button>
+      <button class="btn" type="submit" name="action" value="publish">즉시 발행</button>
+      <button class="btn btn-outline" type="submit" name="action" value="schedule">예약 발행</button>
+    {% else %}
+      <button class="btn btn-outline" type="submit" name="action" value="save">임시저장</button>
+      <button class="btn" type="submit" name="action" value="submit_review">저장하고 심사 요청</button>
+    {% endif %}
+  </div>
+</form>
+{% if user.role == 'editor' and not (article and article.status == 'published') %}
+<script nonce="{{ csp_nonce() }}">
+(() => {
+  const form = document.querySelector('.admin-card');
+  const hidden = document.getElementById('scheduled_at');
+  const monthDay = document.getElementById('scheduled_month_day');
+  const time = document.getElementById('scheduled_time');
+  const buttons = [...document.querySelectorAll('[data-preset]')];
+  if (!form || !hidden || !monthDay || !time) return;
+  const pad = (n) => String(n).padStart(2, '0');
+  const syncManual = () => {
+    if (!/^\d{2}-\d{2}$/.test(monthDay.value) || !time.value) return;
+    hidden.value = `${new Date().getFullYear()}-${monthDay.value}T${time.value}`;
+  };
+  if (hidden.value) {
+    const [datePart, timePart] = hidden.value.split('T');
+    if (datePart && timePart) { monthDay.value = datePart.slice(5); time.value = timePart.slice(0, 5); }
+  }
+  const select = (button) => buttons.forEach((item) => item.classList.toggle('is-selected', item === button));
+  buttons.forEach((button) => button.addEventListener('click', () => {
+    const now = new Date(); const preset = button.dataset.preset; let target = new Date(now);
+    if (preset === '1h') target.setHours(target.getHours() + 1);
+    if (preset === '3h') target.setHours(target.getHours() + 3);
+    if (preset === 'tonight') { target.setHours(18, 0, 0, 0); if (target <= now) target.setDate(target.getDate() + 1); }
+    if (preset === 'tomorrow9') { target.setDate(target.getDate() + 1); target.setHours(9, 0, 0, 0); }
+    if (preset === 'tomorrow-morning') { target.setDate(target.getDate() + 1); target.setHours(6, 0, 0, 0); }
+    monthDay.value = `${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
+    time.value = `${pad(target.getHours())}:${pad(target.getMinutes())}`;
+    hidden.value = `${target.getFullYear()}-${monthDay.value}T${time.value}`;
+    select(button);
+  }));
+  [monthDay, time].forEach((field) => field.addEventListener('input', () => { select(null); syncManual(); }));
+  form.addEventListener('submit', (event) => {
+    if (event.submitter && event.submitter.value === 'schedule') syncManual();
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

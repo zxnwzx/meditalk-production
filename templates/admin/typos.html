@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% block title %}오탈자 제보 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>오탈자·오류 제보함</h1>
+</div>
+{% if reports %}
+  {% for r in reports %}
+  <div class="admin-card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+      <div>
+        <span class="status-pill status-{{ 'published' if r.status=='resolved' else 'pending' }}">{{ '처리완료' if r.status=='resolved' else '미처리' }}</span>
+        <div style="font-family:var(--sans);font-weight:800;font-size:15px;margin-top:8px;color:var(--ink);">{{ r.article_title }}</div>
+        <div class="helptext">{{ r.created_at }}{% if r.reporter_email %} · {{ r.reporter_email }}{% endif %}</div>
+      </div>
+      <div class="row-actions">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('article_detail', article_id=r.article_id) }}" target="_blank">기사 보기</a>
+        <a class="btn btn-sm" href="{{ url_for('admin_edit', article_id=r.article_id) }}">이 기사 수정하기</a>
+        {% if r.status != 'resolved' %}
+        <form method="post" action="{{ url_for('admin_resolve_typo', report_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">처리완료로 표시</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;white-space:pre-line;">{{ r.message }}</p>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="admin-empty">접수된 제보가 없습니다.</div>
+{% endif %}
+{% endblock %}

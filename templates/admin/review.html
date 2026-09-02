@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block title %}심사 대기 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>심사 대기 기사</h1>
+</div>
+
+{% if articles %}
+  {% for a in articles %}
+  <div class="admin-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div>
+        <span class="status-pill status-pending">심사 대기</span>
+        <h2 style="font-family:var(--serif);font-size:20px;margin:10px 0 6px;color:var(--navy-deep);">{{ a.title }}</h2>
+        <div class="helptext">{{ a.category }} · {{ a.author_name }} 기자 · 제출 {{ a.updated_at }}</div>
+      </div>
+      <div class="row-actions">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('article_detail', article_id=a.id) }}" target="_blank">미리보기</a>
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin_edit', article_id=a.id) }}">내용 수정</a>
+        <form method="post" action="{{ url_for('admin_publish', article_id=a.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">발행하기</button>
+        </form>
+      </div>
+    </div>
+    <p style="margin:14px 0;font-size:13.5px;color:var(--ink-soft);line-height:1.7;">{{ a.deck }}</p>
+    <form method="post" action="{{ url_for('admin_reject', article_id=a.id) }}" style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:14px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="note" placeholder="반려 사유를 입력하면 기자에게 안내됩니다 (선택)" style="flex:1;padding:8px 12px;font-size:12.5px;border:1px solid var(--line);border-radius:6px;font-family:var(--sans);">
+      <button class="btn btn-outline btn-sm" type="submit" style="flex-shrink:0;">반려하기</button>
+    </form>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="admin-empty">현재 심사 대기 중인 기사가 없습니다.</div>
+{% endif %}
+{% endblock %}

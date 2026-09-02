@@ -1,0 +1,5 @@
+Flask>=3.0
+gunicorn>=21.0
+Pillow>=10.0
+psycopg2-binary>=2.9  # DATABASE_URL 환경변수를 설정하면 PostgreSQL을 씁니다 (없으면 SQLite로 자동 동작)
+redis>=5.0            # REDIS_URL 환경변수를 설정하면 여러 워커 간 상태(로그인 제한·캐시)를 공유합니다 (없으면 메모리로 자동 동작)

@@ -1,0 +1,18 @@
+services:
+  meditalk:
+    build: .
+    env_file: .env.production
+    environment:
+      PORT: "8000"
+      MEDITOK_DB_PATH: /data/meditok.db
+      MEDITOK_UPLOAD_DIR: /data/uploads
+      SESSION_COOKIE_SECURE: "1"
+      SCHEDULE_WORKER_ENABLED: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - meditalk_data:/data
+    restart: unless-stopped
+
+volumes:
+  meditalk_data:

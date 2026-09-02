@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}세미나·행사 관리 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><h1>세미나·행사 관리</h1></div>
+
+<div class="admin-card" style="margin-bottom:20px;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">새 행사 등록</strong>
+  <form method="post" action="{{ url_for('admin_events') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>행사명</label><input type="text" name="title" required></div>
+    <div class="field"><label>일정 (예: 09.17)</label><input type="text" name="event_date" required style="max-width:160px;"></div>
+    <div class="field"><label>장소</label><input type="text" name="location" required></div>
+    <button type="submit" class="btn btn-sm">등록</button>
+  </form>
+</div>
+
+<table class="admin-table">
+  <thead><tr><th>행사명</th><th>일정</th><th>장소</th><th>작업</th></tr></thead>
+  <tbody>
+    {% for e in events %}
+    <tr>
+      <td data-label="행사명"><strong>{{ e.title }}</strong></td>
+      <td data-label="일정">{{ e.event_date }}</td>
+      <td data-label="장소">{{ e.location }}</td>
+      <td>
+        <form method="post" action="{{ url_for('admin_events') }}" data-confirm="삭제하시겠습니까?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="event_id" value="{{ e.id }}">
+          <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" style="text-align:center;color:var(--ink-faint);padding:24px;">등록된 행사가 없습니다.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

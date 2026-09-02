@@ -1,0 +1,207 @@
+{# Design: 임상 아틀라스 — 뉴스의 정보 밀도를 비대칭 편집면과 절제된 과학 그래픽으로 드러낸다. #}
+{% extends "base.html" %}
+{% block content %}
+
+{% if current_category %}
+  <section class="section" style="border-bottom:none;padding-top:36px;">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-title">{{ current_category }}</div>
+        <a href="{{ url_for('index') }}" class="section-more">← 전체 기사</a>
+      </div>
+      {% if articles %}
+      <div class="article-grid">
+        {% for a in articles %}
+        <article class="article-card">
+          <div class="thumb">{% if a.image_filename %}<img src="{{ image_url(a.image_filename) }}" alt="{{ a.image_caption or a.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ mini_svg(a.id) | safe }}{% endif %}</div>
+          <span class="cat">{{ a.category }}</span>
+          <h3><a href="{{ url_for('article_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+          <p>{{ a.deck }}</p>
+          <div class="meta">{{ a.author_name }} · {{ a.published_at }} · 조회 {{ a.view_count }}</div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-note">이 섹션에는 아직 발행된 기사가 없습니다.</p>
+      {% endif %}
+    </div>
+  </section>
+
+{% else %}
+
+  {% if hero %}
+  <section class="hero-section">
+    <div class="wrap hero-grid">
+      <div class="hero-main">
+        <div class="eyebrow">{{ hero.category }}</div>
+        <h1 class="hero-headline"><a href="{{ url_for('article_detail', article_id=hero.id) }}">{{ hero.title }}</a></h1>
+        <div class="hero-art">{% if hero.image_filename %}<img src="{{ image_url(hero.image_filename) }}" alt="{{ hero.image_caption or hero.title }}" style="width:100%;height:100%;object-fit:cover;">{% else %}<img src="{{ url_for('static', filename='meditok-clinical-atlas-hero.jpg') }}" alt="" aria-hidden="true" class="generated-hero-art">{% endif %}</div>
+        <p class="hero-deck">{{ hero.deck }}</p>
+        <div class="byline">
+          <span>기자 · {{ hero.author_name }}</span>
+          <span>{{ hero.published_at }}</span>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-side-label">이 시각 주요 뉴스</div>
+        {% for s in side_stories %}
+        <div class="side-story">
+          <span class="cat">{{ s.category }}</span>
+          <h4><a href="{{ url_for('article_detail', article_id=s.id) }}">{{ s.title }}</a></h4>
+          <div class="meta">{{ s.published_at }} · {{ s.author_name }}</div>
+        </div>
+        {% endfor %}
+        {% if not side_stories %}
+        <p class="empty-note">추가 발행 기사가 쌓이면 이 자리에 표시됩니다.</p>
+        {% endif %}
+        {% with ad=ad_slots.get('home_2'), ad_context='ad-slot-rail' %}{% include "_ad_slot.html" %}{% endwith %}
+      </div>
+    </div>
+  </section>
+  {% with ad=ad_slots.get('home_1'), ad_context='ad-slot-wide' %}{% include "_ad_slot.html" %}{% endwith %}
+  {% else %}
+  <section class="hero-section">
+    <div class="wrap">
+      <div class="admin-empty">아직 발행된 기사가 없습니다. 기자 계정으로 로그인해 관리자 사이트에서 첫 기사를 작성·발행해 보세요.</div>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="wrap" style="padding-bottom:8px;">
+    <div class="pick-rank-grid">
+      {% if pick %}
+      <div class="pick-spotlight">
+        <div class="pick-ribbon">MEDITALK PICK</div>
+        <div class="pick-kicker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
+          이주의 메디톡 PICK — 편집국이 뽑은 이 주의 기사
+        </div>
+        <h3><a href="{{ url_for('article_detail', article_id=pick.id) }}">{{ pick.title }}</a></h3>
+        <p>{{ pick.deck }}</p>
+        <div class="meta">{{ pick.category }} · {{ pick.author_name }} · {{ pick.published_at }}</div>
+      </div>
+      {% else %}
+      <div class="pick-spotlight">
+        <div class="pick-kicker">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
+          이주의 메디톡
+        </div>
+        <p style="margin:0;">아직 이주의 PICK이 지정되지 않았습니다. 편집장이 발행 기사 중 하나를 지정하면 이 자리에 소개됩니다.</p>
+      </div>
+      {% endif %}
+
+      <div class="ranking-widget">
+        <div class="rw-head">실시간 인기기사 <span class="live">LIVE</span></div>
+        {% if ranking_items %}
+          {% for r in ranking_items %}
+          <div class="rw-item">
+            <div class="rw-num">{{ loop.index }}</div>
+            <div>
+              <h5><a href="{{ url_for('article_detail', article_id=r.id) }}">{{ r.title }}</a></h5>
+              <div class="rw-meta">{{ r.category }} · 조회 {{ r.view_count }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <p class="empty-note" style="padding:0;">아직 집계된 조회 데이터가 없습니다.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% with ad=ad_slots.get('home_3'), ad_context='ad-slot-wide' %}{% include "_ad_slot.html" %}{% endwith %}
+
+  {% for cat, arts in sections.items() %}
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="section-title"><span class="idx">{{ '%02d' % loop.index }}</span> {{ cat }}</div>
+        <a href="{{ url_for('index', category=cat) }}" class="section-more">전체보기 →</a>
+      </div>
+      {% if arts %}
+      <div class="article-grid">
+        {% for a in arts %}
+        <article class="article-card">
+          <div class="thumb">{% if a.image_filename %}<img src="{{ image_url(a.image_filename) }}" alt="{{ a.image_caption or a.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ mini_svg(a.id) | safe }}{% endif %}</div>
+          <span class="cat">{{ a.category }}</span>
+          <h3><a href="{{ url_for('article_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+          <p>{{ a.deck }}</p>
+          <div class="meta">{{ a.author_name }} · {{ a.published_at }} · 조회 {{ a.view_count }}</div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-note">이 섹션에는 아직 발행된 기사가 없습니다.</p>
+      {% endif %}
+    </div>
+  </section>
+  {% if loop.index == 3 %}{% with ad=ad_slots.get('home_4'), ad_context='ad-slot-wide' %}{% include "_ad_slot.html" %}{% endwith %}{% endif %}
+  {% endfor %}
+
+  {% if opinion_pick %}
+  <section class="section opinion-section" style="border-bottom:none;">
+    <div class="wrap opinion-grid">
+      <div class="opinion-portrait"><img src="{{ url_for('static', filename='meditok-opinion-archive.jpg') }}" alt="" aria-hidden="true"></div>
+      <div>
+        <div class="eyebrow" style="color:var(--amber);">오피니언 · 이 주의 기고</div>
+        <h3 class="opinion-title">
+          <a href="{{ url_for('article_detail', article_id=opinion_pick.id) }}">{{ opinion_pick.title }}</a>
+        </h3>
+        <p class="opinion-deck">{{ opinion_pick.deck }}</p>
+        <div class="opinion-meta">{{ opinion_pick.author_name }} · {{ opinion_pick.published_at }}</div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="section">
+    <div class="wrap split-grid">
+      <div class="mini-panel">
+        <h4>세미나·행사 <a href="{{ url_for('events_page') }}">전체보기 →</a></h4>
+        {% for e in events %}
+        <div class="event-row">
+          <div class="event-date">{{ e.event_date }}</div>
+          <div>
+            <div class="et">{{ e.title }}</div>
+            <div class="ep">{{ e.location }}</div>
+          </div>
+        </div>
+        {% else %}
+        <p class="empty-note">예정된 행사가 없습니다.</p>
+        {% endfor %}
+      </div>
+      <div class="mini-panel">
+        <h4>채용정보 <a href="{{ url_for('jobs_page') }}">전체보기 →</a></h4>
+        {% for j in jobs %}
+        <div class="job-row">
+          <div>
+            <div class="jc">{{ j.company }}</div>
+            <div class="jt">{{ j.position }}</div>
+          </div>
+          <div class="job-tag">{{ j.experience_level }}</div>
+        </div>
+        {% else %}
+        <p class="empty-note">등록된 채용정보가 없습니다.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <div class="newsletter" id="newsletter">
+    <div class="wrap">
+      <div>
+        <h3>주 3회, 편집국이 고른 제약·바이오 뉴스</h3>
+        <p>임상·허가·정책 핵심 이슈를 메일 하나로 받아보세요.</p>
+      </div>
+      <form class="nl-form" method="post" action="{{ url_for('newsletter_subscribe') }}" data-newsletter-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="업무용 이메일 주소" aria-label="이메일 주소" required>
+        <div class="nl-topics">{% for category in categories %}<label><input type="checkbox" name="categories" value="{{ category }}"><span>{{ category }}</span></label>{% endfor %}</div>
+        <button type="submit" class="btn"><span class="nl-submit-label">구독하기</span><span class="nl-submit-loading" hidden>처리 중…</span></button>
+        <p class="newsletter-status" data-newsletter-status role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+{% endif %}
+
+{% endblock %}

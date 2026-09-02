@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ table }} | DB 뷰어{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>{{ table }} <span class="helptext" style="font-weight:400;">({{ total }}건)</span></h1>
+  <a href="{{ url_for('admin_db_viewer') }}" class="btn btn-outline btn-sm">← 테이블 목록</a>
+</div>
+<div style="overflow-x:auto;">
+<table class="admin-table" style="min-width:600px;">
+  <thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>{% for c in columns %}<td data-label="{{ c }}" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ row[c] if row[c] is not none else '' }}</td>{% endfor %}</tr>
+    {% else %}
+    <tr><td colspan="{{ columns|length }}" style="text-align:center;color:var(--ink-faint);padding:24px;">데이터가 없습니다.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+<div class="page-pager">
+  {% if page > 1 %}<a href="{{ url_for('admin_db_viewer_table', table=table, page=page-1) }}" class="btn btn-outline btn-sm">← 이전</a>{% endif %}
+  <span class="page-pager-num">{{ page }}페이지</span>
+  {% if has_more %}<a href="{{ url_for('admin_db_viewer_table', table=table, page=page+1) }}" class="btn btn-outline btn-sm">다음 →</a>{% endif %}
+</div>
+{% endblock %}

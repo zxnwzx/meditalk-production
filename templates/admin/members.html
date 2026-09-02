@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block title %}회원 관리 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>회원 관리</h1>
+</div>
+
+<div class="stat-row" style="grid-template-columns:repeat(2,1fr);">
+  <div class="stat-box"><div class="n">{{ total }}</div><div class="l">전체 가입 회원</div></div>
+  <div class="stat-box"><div class="n">{{ today_count }}</div><div class="l">오늘 신규 가입</div></div>
+</div>
+
+<form method="get" class="admin-card" style="display:flex;gap:10px;align-items:center;margin-bottom:18px;">
+  <input type="text" name="q" value="{{ q }}" placeholder="아이디 또는 이름으로 검색" style="flex:1;border:1px solid var(--line-strong);padding:9px 12px;font-family:var(--sans);font-size:14px;">
+  <button type="submit" class="btn btn-sm">검색</button>
+  {% if q %}<a href="{{ url_for('admin_members') }}" class="btn btn-outline btn-sm">초기화</a>{% endif %}
+</form>
+
+{% if members %}
+<table class="admin-table">
+  <thead><tr><th>아이디</th><th>이름</th><th>가입일</th><th>스크랩</th><th>댓글</th></tr></thead>
+  <tbody>
+    {% for m in members %}
+    <tr>
+      <td data-label="아이디"><strong>{{ m.username }}</strong></td>
+      <td data-label="이름">{{ m.name }}</td>
+      <td data-label="가입일">{{ m.created_at }}</td>
+      <td data-label="스크랩">{{ m.bookmark_count }}건</td>
+      <td data-label="댓글">{{ m.comment_count }}건</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="page-pager">
+  {% if page > 1 %}<a href="{{ url_for('admin_members', q=q, page=page-1) }}" class="btn btn-outline btn-sm">← 이전</a>{% endif %}
+  <span class="page-pager-num">{{ page }}페이지</span>
+  {% if has_more %}<a href="{{ url_for('admin_members', q=q, page=page+1) }}" class="btn btn-outline btn-sm">다음 →</a>{% endif %}
+</div>
+{% else %}
+<div class="admin-empty">{{ '검색 결과가 없습니다.' if q else '아직 가입한 독자 회원이 없습니다.' }}</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "admin/base.html" %}
+{% block title %}대시보드 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>{{ '전체 기사 대시보드' if user.role=='editor' else '내 기사' }}</h1>
+  <a href="{{ url_for('admin_write') }}" class="btn">+ 새 기사 작성</a>
+</div>
+
+<div class="stat-row">
+  <a href="{{ url_for('admin_dashboard') }}" class="stat-box {{ 'is-active' if not status_filter else '' }}">
+    <div class="n">{{ stats.draft + stats.pending + stats.scheduled + stats.published + stats.rejected }}</div><div class="l">전체</div>
+  </a>
+  <a href="{{ url_for('admin_dashboard', status='draft') }}" class="stat-box {{ 'is-active' if status_filter=='draft' else '' }}">
+    <div class="n">{{ stats.draft }}</div><div class="l">작성중 (초안)</div>
+  </a>
+  <a href="{{ url_for('admin_dashboard', status='pending') }}" class="stat-box {{ 'is-active' if status_filter=='pending' else '' }}">
+    <div class="n">{{ stats.pending }}</div><div class="l">심사 대기</div>
+  </a>
+  <a href="{{ url_for('admin_dashboard', status='scheduled') }}" class="stat-box {{ 'is-active' if status_filter=='scheduled' else '' }}">
+    <div class="n">{{ stats.scheduled }}</div><div class="l">예약 발행</div>
+  </a>
+  <a href="{{ url_for('admin_dashboard', status='published') }}" class="stat-box {{ 'is-active' if status_filter=='published' else '' }}">
+    <div class="n">{{ stats.published }}</div><div class="l">발행됨</div>
+  </a>
+  <a href="{{ url_for('admin_dashboard', status='rejected') }}" class="stat-box {{ 'is-active' if status_filter=='rejected' else '' }}">
+    <div class="n">{{ stats.rejected }}</div><div class="l">반려됨</div>
+  </a>
+</div>
+
+{% if status_filter %}
+<div class="filter-notice">
+  <strong>{{ status_label(status_filter) }}</strong> 상태의 기사만 보고 있습니다 ({{ articles|length }}건)
+  <a href="{{ url_for('admin_dashboard') }}">전체 보기 →</a>
+</div>
+{% endif %}
+
+{% if user.role == 'editor' %}
+<div class="admin-card" style="margin-bottom:24px;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);">속보 티커 설정</strong>
+  <p class="helptext" style="margin:8px 0 12px;">현재: {{ ticker_speed_sec }}초 · {{ ticker_category or '전체 섹션' }}{% if ticker_manual_count %} · 수동선택 {{ ticker_manual_count }}건{% endif %}</p>
+  <a href="{{ url_for('admin_ticker_settings') }}" class="btn btn-sm">속도·섹션·기사 직접 고르기</a>
+</div>
+{% endif %}
+
+{% if chart_data %}
+<div class="admin-card">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">최근 14일 발행 추이</strong>
+  <svg viewBox="0 0 700 120" width="100%" height="120" preserveAspectRatio="none" style="overflow:visible;">
+    {% for d in chart_data.daily %}
+    {% set bar_h = (d.count / chart_data.max_daily * 80) if chart_data.max_daily > 0 else 0 %}
+    {% set x = loop.index0 * 50 + 10 %}
+    <rect x="{{ x }}" y="{{ 90 - bar_h }}" width="30" height="{{ bar_h if bar_h > 0 else 0 }}" fill="#0B4EA2" rx="2"></rect>
+    <text x="{{ x + 15 }}" y="105" font-size="9" fill="#54595E" text-anchor="middle" font-family="monospace">{{ d.label }}</text>
+    <text x="{{ x + 15 }}" y="{{ 84 - bar_h if bar_h > 8 else 84 - bar_h }}" font-size="10" fill="#1A1D21" text-anchor="middle" font-family="monospace">{{ d.count if d.count > 0 else '' }}</text>
+    {% endfor %}
+  </svg>
+  {% if chart_data.categories %}
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin:20px 0 12px;">섹션별 발행 기사 수</strong>
+  <div>
+    {% for c in chart_data.categories %}
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:80px;font-size:12px;color:var(--ink-soft);flex-shrink:0;">{{ c.category }}</div>
+      <div style="flex:1;background:var(--paper-alt);border-radius:2px;overflow:hidden;height:16px;">
+        <div style="width:{{ (c.c / chart_data.max_cat * 100) if chart_data.max_cat > 0 else 0 }}%;background:var(--teal);height:100%;"></div>
+      </div>
+      <div style="width:24px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink);">{{ c.c }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if articles %}
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>제목</th>
+      <th>섹션</th>
+      {% if user.role == 'editor' %}<th>기자</th>{% endif %}
+      <th>상태</th>
+      <th>최근 수정</th>
+      <th>작업</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in articles %}
+    {% set can_edit = (a.author_id == user.id and a.status in ('draft','rejected','pending')) or user.role == 'editor' %}
+    <tr>
+      <td><strong>{{ a.title }}</strong>{% if a.is_pick %}<span class="pick-badge">PICK</span>{% endif %}</td>
+      <td data-label="섹션">{{ a.category }}</td>
+      {% if user.role == 'editor' %}<td data-label="기자">{{ a.author_name }}</td>{% endif %}
+      <td>
+        <span class="status-pill status-{{ a.status }}">{{ status_label(a.status) }}</span>
+        {% if a.status == 'rejected' and a.review_note %}<div class="helptext" style="max-width:180px;">사유: {{ a.review_note }}</div>{% endif %}
+        {% if a.status == 'scheduled' and a.scheduled_at %}<div class="helptext" style="max-width:180px;">예약: {{ a.scheduled_at }}</div>{% endif %}
+      </td>
+      <td data-label="최근 수정">{{ a.updated_at }}</td>
+      <td>
+        <div class="row-actions">
+          {% if a.author_id == user.id or user.role == 'editor' %}
+            <a class="btn btn-outline btn-sm" href="{{ url_for('article_detail', article_id=a.id) }}" target="_blank">
+              {{ '기사 보기' if a.status == 'published' else '미리보기' }}
+            </a>
+          {% endif %}
+          {% if can_edit %}
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin_edit', article_id=a.id) }}">수정</a>
+          {% endif %}
+          {% if a.author_id == user.id or user.role == 'editor' %}
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin_article_history', article_id=a.id) }}">이력</a>
+          {% endif %}
+          {% if a.status in ('draft','rejected') and a.author_id == user.id %}
+            <form method="post" action="{{ url_for('admin_submit', article_id=a.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm" type="submit">심사 요청</button>
+            </form>
+          {% endif %}
+          {% if a.status == 'pending' and user.role == 'editor' %}
+            <form method="post" action="{{ url_for('admin_publish', article_id=a.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm" type="submit">발행</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_reject', article_id=a.id) }}" style="display:inline-flex;gap:4px;align-items:center;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="note" placeholder="반려 사유(선택)" style="width:110px;padding:6px 8px;font-size:11px;border:1px solid var(--line);font-family:var(--sans);">
+              <button class="btn btn-outline btn-sm" type="submit">반려</button>
+            </form>
+          {% endif %}
+          {% if a.status == 'scheduled' and user.role == 'editor' %}
+            <form method="post" action="{{ url_for('admin_publish', article_id=a.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm" type="submit">지금 발행</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_unschedule', article_id=a.id) }}" style="display:inline;" data-confirm="예약을 취소하고 초안으로 되돌립니다.">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-outline btn-sm" type="submit">예약 취소</button>
+            </form>
+          {% endif %}
+          {% if a.status == 'published' and user.role == 'editor' %}
+            <form method="post" action="{{ url_for('admin_pick', article_id=a.id) }}" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm {{ '' if a.is_pick else 'btn-pick' }}" type="submit">{{ 'PICK 해제' if a.is_pick else '이주의 PICK 지정' }}</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_unpublish', article_id=a.id) }}" style="display:inline;" data-confirm="이 기사를 즉시 비공개로 전환합니다. 계속하시겠습니까?">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-sm" type="submit">긴급 비공개</button>
+            </form>
+          {% endif %}
+          {% if a.status != 'published' and (a.author_id == user.id or user.role=='editor') %}
+            <form method="post" action="{{ url_for('admin_delete', article_id=a.id) }}" style="display:inline;" data-confirm="삭제하시겠습니까?">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+            </form>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="admin-empty">표시할 기사가 없습니다. "새 기사 작성"으로 첫 기사를 써보세요.</div>
+{% endif %}
+{% endblock %}

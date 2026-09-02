@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% block title %}뉴스레터 발송 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>뉴스레터 발송</h1>
+</div>
+
+{% if not smtp_ready %}
+<div class="admin-card" style="border-color:var(--amber);background:var(--accent-pale);">
+  <strong style="color:#6E241A;">이메일 발송 서버가 아직 설정되지 않았습니다.</strong>
+  <p style="font-size:13px;color:#6E241A;margin-top:8px;line-height:1.7;">
+    Render 환경변수에 <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>를
+    설정하면 아래 "지금 발송" 버튼으로 실제 이메일을 보낼 수 있습니다. 설정 전까지는 미리보기만 가능합니다.
+  </p>
+</div>
+{% endif %}
+
+<div class="admin-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <div>
+      <strong style="font-family:var(--sans);font-weight:800;font-size:16px;color:var(--ink);">최근 7일 발행 기사 {{ recent|length }}건</strong>
+      <div class="helptext">구독자 {{ sub_count }}명 · 일반 구독자는 모든 분야를 받고, 분야 구독자는 선택한 분야만 받습니다.</div>
+    </div>
+    <form method="post" action="{{ url_for('admin_newsletter_send') }}" data-confirm="선택한 구독자에게 뉴스레터를 발송합니다. 계속하시겠습니까?" class="newsletter-send-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <select name="category" aria-label="발송 분야"><option value="">전체 브리핑</option>{% for category in categories %}<option value="{{ category }}">{{ category }} · 관심 구독 {{ preference_counts[category] }}명</option>{% endfor %}</select>
+      <button class="btn" type="submit" {{ 'disabled' if not smtp_ready or not recent or not sub_count else '' }}>지금 발송</button>
+    </form>
+  </div>
+
+  {% if recent %}
+  <div style="border-top:1px solid var(--line);padding-top:14px;">
+    {% for a in recent %}
+    <div style="padding:10px 0;border-bottom:1px solid var(--line);">
+      <div style="font-family:var(--sans);font-weight:800;font-size:14px;color:var(--ink);">{{ a.title }}</div>
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;">{{ a.deck }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty-note">최근 7일 이내 발행된 기사가 없습니다.</p>
+  {% endif %}
+  <div class="newsletter-preference-stats"><strong>분야별 관심 구독</strong>{% for category in categories %}<span>{{ category }} <b>{{ preference_counts[category] }}</b></span>{% endfor %}</div>
+</div>
+{% endblock %}

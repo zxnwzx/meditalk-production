@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: meditalk
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GUNICORN_WORKERS
+        value: "1"
+      - key: GUNICORN_THREADS
+        value: "4"
+      - key: GUNICORN_TIMEOUT
+        value: "60"
+      - key: PUBLISH_POLL_SECONDS
+        value: "2"

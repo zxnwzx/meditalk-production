@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+{% block title %}사이트 현황 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><h1>사이트 현황</h1></div>
+
+<div class="stat-row" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-box"><div class="n">{{ stats.users_total }}</div><div class="l">전체 회원</div></div>
+  <div class="stat-box"><div class="n">{{ stats.articles_published }}</div><div class="l">발행 기사</div></div>
+  <div class="stat-box"><div class="n">{{ stats.comments_total }}</div><div class="l">댓글</div></div>
+  <div class="stat-box"><div class="n">{{ stats.newsletter_subscribers }}</div><div class="l">뉴스레터 구독</div></div>
+</div>
+
+<div class="stat-row product-stat-row">
+  <div class="stat-box"><div class="n">{{ stats.topic_follows_total }}</div><div class="l">관심 주제 팔로우</div></div>
+  <div class="stat-box"><div class="n">{{ stats.article_versions_total }}</div><div class="l">기사 수정 이력</div></div>
+  <div class="stat-box"><div class="n">{{ stats.ad_campaigns_active }}</div><div class="l">운영 중 광고</div></div>
+  <div class="stat-box"><div class="n">{{ stats.ad_clicks_total }}</div><div class="l">광고 클릭</div></div>
+</div>
+
+<div class="admin-card" style="margin:20px 0;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">회원 구성</strong>
+  <p style="font-size:13.5px;color:var(--ink-soft);">독자 {{ stats.readers }}명 · 기자 {{ stats.journalists }}명 · 편집장 {{ stats.editors }}명</p>
+</div>
+
+<div class="admin-card" style="margin-bottom:20px;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">처리가 필요한 항목</strong>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    <a href="{{ url_for('admin_review') }}" class="btn btn-outline btn-sm">심사 대기 {{ stats.articles_pending }}건</a>
+    <a href="{{ url_for('admin_typos') }}" class="btn btn-outline btn-sm">미처리 오탈자 제보 {{ stats.typos_open }}건</a>
+    <a href="{{ url_for('admin_comment_reports') }}" class="btn btn-outline btn-sm">댓글 신고 {{ stats.comment_reports_open }}건</a>
+    <a href="{{ url_for('admin_inquiries') }}" class="btn btn-outline btn-sm">광고·제휴 문의 {{ stats.inquiries_total }}건</a>
+    <a href="{{ url_for('admin_analytics') }}" class="btn btn-outline btn-sm">기사·광고 성과 보기</a>
+  </div>
+</div>
+
+<div class="admin-card" style="margin-bottom:20px;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">시스템 상태</strong>
+  <table style="width:100%;font-size:13.5px;color:var(--ink-soft);border-collapse:collapse;">
+    <tr><td style="padding:5px 0;width:160px;">DB 엔진</td><td>{{ db_engine }}{% if db_size_mb %} ({{ db_size_mb }}MB){% endif %}</td></tr>
+    <tr><td style="padding:5px 0;">Redis 연결</td><td>{{ '연결됨 — 여러 워커도 안전' if redis_connected else '미연결 — 서버 메모리 사용중' }}</td></tr>
+    <tr><td style="padding:5px 0;">이미지 저장소</td><td>{{ 'S3/R2 연결됨' if s3_connected else '로컬 디스크 (재배포시 소실 위험)' }}</td></tr>
+    <tr><td style="padding:5px 0;">스크랩 총계</td><td>{{ stats.bookmarks_total }}건</td></tr>
+    <tr><td style="padding:5px 0;">등록된 행사/채용</td><td>{{ stats.events_total }}건 / {{ stats.jobs_total }}건</td></tr>
+  </table>
+</div>
+
+<div class="admin-card">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">최근 관리 활동 (최대 20건)</strong>
+  {% if recent_activity %}
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <thead><tr style="text-align:left;color:var(--ink-faint);font-family:var(--mono);font-size:11px;"><th style="padding:6px 0;">시각</th><th>담당자</th><th>활동</th><th>상세</th></tr></thead>
+    <tbody>
+      {% for log in recent_activity %}
+      <tr style="border-top:1px solid var(--line);">
+        <td style="padding:7px 0;color:var(--ink-faint);font-family:var(--mono);font-size:11.5px;">{{ log.created_at }}</td>
+        <td style="padding:7px 0;">{{ log.actor_name }}</td>
+        <td style="padding:7px 0;">{{ log.action }}</td>
+        <td style="padding:7px 0;color:var(--ink-soft);">{{ log.detail or '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-note">아직 기록된 활동이 없습니다.</p>
+  {% endif %}
+</div>
+{% endblock %}

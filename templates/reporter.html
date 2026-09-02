@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ reporter.name }} 기자 | 메디톡{% endblock %}
+{% block meta_description %}메디톡 {{ reporter.name }} 기자가 작성한 기사 모음{% endblock %}
+{% block content %}
+<div class="wrap reporter-head">
+  <div class="reporter-avatar{% if profile and profile.avatar_filename %} has-photo{% endif %}">
+    {% if profile and profile.avatar_filename %}<img src="{{ image_url(profile.avatar_filename) }}" alt="{{ reporter.name }} 기자 프로필 사진">{% else %}<span aria-hidden="true">{{ reporter.name[:1] }}</span>{% endif %}
+  </div>
+  <div><span class="reporter-kicker">REPORTER PROFILE</span><h1>{{ reporter.name }} {{ '편집장' if reporter.role == 'editor' else '기자' }}</h1><div class="count">발행 기사 {{ total }}건</div></div>
+</div>
+{% if profile %}<section class="wrap reporter-profile-card"><div><span>EXPERTISE</span><h2>{{ profile.expertise or '제약·바이오 산업 취재' }}</h2><p>{{ profile.bio or '메디톡의 전문 기자로서 산업 현장의 변화를 취재합니다.' }}</p>{% if profile.verification_note %}<p class="reporter-verification">{{ profile.verification_note }}</p>{% endif %}</div><div class="reporter-contact">{% if profile.contact_email %}<a href="mailto:{{ profile.contact_email }}">기자에게 연락</a>{% endif %}{% if profile.tip_url %}<a href="{{ profile.tip_url }}" target="_blank" rel="noopener">안전한 제보 경로 ↗</a>{% endif %}</div></section>{% endif %}
+<div class="wrap search-list">
+  {% if articles %}{% for a in articles %}<div class="search-row"><div class="thumb">{% if a.image_filename %}<img src="{{ image_url(a.image_filename) }}" alt="{{ a.image_caption or a.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ mini_svg(a.id) | safe }}{% endif %}</div><div><span class="cat" style="font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--amber);text-transform:uppercase;">{{ a.category }}</span><h3><a href="{{ url_for('article_detail', article_id=a.id) }}">{{ a.title }}</a></h3><p>{{ a.deck }}</p><div class="meta">{{ a.published_at }} · 조회 {{ a.view_count }}</div></div></div>{% endfor %}<div class="page-pager">{% if page > 1 %}<a href="{{ url_for('reporter_profile', username=reporter.username, page=page-1) }}" class="btn btn-outline btn-sm">← 이전</a>{% endif %}<span class="page-pager-num">{{ page }}페이지</span>{% if has_more %}<a href="{{ url_for('reporter_profile', username=reporter.username, page=page+1) }}" class="btn btn-outline btn-sm">다음 →</a>{% endif %}</div>{% else %}<p class="empty-note">아직 발행된 기사가 없습니다.</p>{% endif %}
+</div>
+{% endblock %}

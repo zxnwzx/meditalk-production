@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% block title %}댓글 신고 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>댓글 신고함</h1>
+</div>
+{% if reports %}
+  {% for r in reports %}
+  <div class="admin-card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+      <div>
+        <div class="helptext">{{ r.article_title }} · 신고자 {{ r.reporter_name }} · {{ r.created_at }}</div>
+        <div style="font-family:var(--sans);font-size:13px;font-weight:700;color:var(--ink);margin-top:6px;">작성자: {{ r.commenter_name }}</div>
+      </div>
+      <div class="row-actions">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('article_detail', article_id=r.article_id) }}#comments" target="_blank">기사에서 보기</a>
+        <form method="post" action="{{ url_for('delete_comment', comment_id=r.comment_id) }}" data-confirm="이 댓글을 삭제하시겠습니까?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-danger btn-sm" type="submit">댓글 삭제</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_dismiss_report', report_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-outline btn-sm" type="submit">신고 기각</button>
+        </form>
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.7;background:var(--paper-alt);padding:10px 12px;">"{{ r.comment_body }}"</p>
+    {% if r.reason %}<p class="helptext" style="margin-top:8px;">신고 사유: {{ r.reason }}</p>{% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="admin-empty">신고된 댓글이 없습니다.</div>
+{% endif %}
+{% endblock %}

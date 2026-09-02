@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}세미나·행사 | 메디톡{% endblock %}
+{% block meta_description %}제약·바이오 업계의 세미나·행사 일정{% endblock %}
+{% block content %}
+<div class="wrap search-head">
+  <h1>세미나·행사</h1>
+  <div class="count">{{ events|length }}건</div>
+</div>
+<div class="wrap" style="padding-bottom:60px;">
+  {% for e in events %}
+  <div class="event-row" style="padding:18px 0;border-bottom:1px solid var(--line);">
+    <div class="event-date" style="min-width:70px;">{{ e.event_date }}</div>
+    <div>
+      <div class="et" style="font-size:16px;">{{ e.title }}</div>
+      <div class="ep">{{ e.location }}</div>
+    </div>
+  </div>
+  {% else %}
+  <p class="empty-note">예정된 행사가 없습니다.</p>
+  {% endfor %}
+</div>
+{% endblock %}

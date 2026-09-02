@@ -1,0 +1,228 @@
+{% from "_icons.html" import star, icon_link, icon_print %}
+{% extends "base.html" %}
+{% block title %}{{ article.title }} | 메디톡{% endblock %}
+{% block meta_description %}{{ article.deck }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.title }}{% endblock %}
+{% block og_description %}{{ article.deck }}{% endblock %}
+{% block twitter_title %}{{ article.title }}{% endblock %}
+{% block twitter_description %}{{ article.deck }}{% endblock %}
+{% block og_image %}{% if article.image_filename %}{{ image_url(article.image_filename) }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block og_image_secure %}{% if article.image_filename %}{{ image_url(article.image_filename) }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block og_image_type %}{% if article.image_filename %}image/jpeg{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block og_image_dims %}{% if article.image_filename %}<meta property="og:image:width" content="{{ article.image_width }}"><meta property="og:image:height" content="{{ article.image_height }}">{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block og_image_alt %}{% if article.image_filename %}{{ article.image_caption or article.title }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block twitter_image %}{% if article.image_filename %}{{ image_url(article.image_filename) }}{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block structured_data %}
+{% if article.status == 'published' %}
+<script type="application/ld+json" nonce="{{ csp_nonce() }}">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": {{ article.title|tojson }},
+  "description": {{ article.deck|tojson }},
+  "datePublished": {{ ((article.published_at or article.created_at)|replace(' ', 'T') + '+09:00')|tojson }},
+  "dateModified": {{ ((article.updated_at or article.published_at or article.created_at)|replace(' ', 'T') + '+09:00')|tojson }},
+  "author": {
+    "@type": "Person",
+    "name": {{ article.author_name|tojson }}
+  },
+  "publisher": {
+    "@type": "NewsMediaOrganization",
+    "name": {{ site_name|tojson }},
+    "logo": {
+      "@type": "ImageObject",
+      "url": {{ (request.url_root.rstrip('/') + url_for('static', filename='android-chrome-512x512.png'))|tojson }}
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": {{ request.url|tojson }}
+  }{% if article.image_filename %},
+  "image": [{{ image_url(article.image_filename)|tojson }}]
+  {% endif %}
+}
+</script>
+{% else %}
+{{ super() }}
+{% endif %}
+{% endblock %}
+{% block content %}
+<article class="article-detail wrap">
+  {% with ad=ad_slots.get('article_left_1'), ad_context='ad-slot-side ad-slot-left' %}{% include "_ad_slot.html" %}{% endwith %}
+  {% with ad=ad_slots.get('article_right_1'), ad_context='ad-slot-side ad-slot-right' %}{% include "_ad_slot.html" %}{% endwith %}
+  {% if article.status == 'published' %}
+  <nav class="breadcrumb">
+    <a href="{{ url_for('index') }}">홈</a>
+    <span>/</span>
+    <a href="{{ url_for('index', category=article.category) }}">{{ article.category }}</a>
+  </nav>
+  {% endif %}
+
+  {% if article.status != 'published' %}
+  <div class="preview-banner">
+    {% if article.status == 'pending' %}미리보기 — 아직 심사 대기 중이라 독자에게는 보이지 않습니다.
+    {% elif article.status == 'draft' %}미리보기 — 초안 상태로, 발행 전까지 본인에게만 보입니다.
+    {% elif article.status == 'rejected' %}미리보기 — 반려된 기사입니다. 수정 후 다시 심사 요청할 수 있습니다.
+    {% elif article.status == 'scheduled' %}미리보기 — {{ article.scheduled_at }}에 자동 발행될 예정입니다.
+    {% endif %}
+    <a href="{{ url_for('admin_edit', article_id=article.id) }}" class="btn btn-sm" style="margin-left:10px;">이 기사 수정하기</a>
+  </div>
+  {% endif %}
+
+  {% if article.status == 'rejected' and article.review_note %}
+  <div class="reject-note-box">
+    <strong>편집장 반려 사유</strong>
+    <p>{{ article.review_note }}</p>
+  </div>
+  {% endif %}
+
+  <div class="eyebrow">{{ article.category }}{% if article.is_pick %}<span class="pick-badge" style="margin-left:4px;">PICK</span>{% endif %}</div>
+  <h1>{{ article.title }}</h1>
+  <p class="deck">{{ article.deck }}</p>
+  <div class="byline">
+    <span>기자 · <a href="{{ url_for('reporter_profile', username=article.author_username) }}" class="byline-link">{{ article.author_name }}</a></span>
+    <span>발행 {{ article.published_at or '미발행' }}</span>
+    {% if article.updated_at and article.updated_at != article.published_at %}<span>수정 {{ article.updated_at }}</span>{% endif %}
+    {% if article.status == 'published' %}<span>조회 {{ article.view_count }}</span>{% endif %}
+  </div>
+
+  {% if transparency %}
+  <section class="transparency-card"><div class="transparency-head"><span>REPORTING NOTE</span><h5>취재·검증 정보</h5><b>{{ {'news':'뉴스','analysis':'분석','opinion':'오피니언'}.get(transparency.report_type, '뉴스') }}</b></div><div class="transparency-body">{% if transparency.reporting_method %}<p><strong>취재 방식</strong>{{ transparency.reporting_method }}</p>{% endif %}{% if transparency.uncertainty_note %}<p><strong>한계·불확실성</strong>{{ transparency.uncertainty_note }}</p>{% endif %}{% if transparency.conflict_note %}<p><strong>이해상충</strong>{{ transparency.conflict_note }}</p>{% endif %}{% if not transparency.reporting_method and not transparency.uncertainty_note and not transparency.conflict_note %}<p><strong>편집 확인</strong>공개 정보와 취재 기준을 바탕으로 편집국 검토를 거쳤습니다.</p>{% endif %}</div></section>
+  {% endif %}
+
+  {% if article.status == 'published' %}
+  <div class="article-actions">
+    {% if user %}
+    <form method="post" action="{{ url_for('toggle_bookmark', article_id=article.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-outline btn-sm btn-icon">{{ star(filled=is_bookmarked) }} {{ '스크랩됨' if is_bookmarked else '스크랩' }}</button>
+    </form>
+    <form method="post" action="{{ url_for('toggle_topic_follow') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="topic_type" value="category"><input type="hidden" name="topic_value" value="{{ article.category }}">
+      <button type="submit" class="btn btn-outline btn-sm">{{ '팔로우 중' if follows_category else article.category ~ ' 팔로우' }}</button>
+    </form>
+    {% endif %}
+    <button type="button" class="btn btn-outline btn-sm btn-icon" data-copy-link="{{ request.url }}">{{ icon_link() }} 링크 공유</button>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('article_trust_card', article_id=article.id) }}" target="_blank" rel="noopener">신뢰 카드</a>
+    <button type="button" class="btn btn-outline btn-sm btn-icon" data-print-btn>{{ icon_print() }} 인쇄</button>
+  </div>
+  {% endif %}
+
+  {% if article.image_filename %}
+  <figure class="article-figure">
+    <img src="{{ image_url(article.image_filename) }}" alt="{{ article.image_caption or article.title }}">
+    {% if article.image_caption %}<figcaption>{{ article.image_caption }}</figcaption>{% endif %}
+  </figure>
+  {% endif %}
+
+  <div class="body">{{ render_article_body(article.id, article.body) }}</div>
+  {% with ad=ad_slots.get('article_left_2'), ad_context='ad-slot-side ad-slot-left ad-slot-midpoint' %}{% include "_ad_slot.html" %}{% endwith %}
+  {% with ad=ad_slots.get('article_right_2'), ad_context='ad-slot-side ad-slot-right ad-slot-midpoint' %}{% include "_ad_slot.html" %}{% endwith %}
+
+  {% if article_tags %}
+  <div class="tag-list">
+    {% for t in article_tags %}
+    <a href="{{ url_for('tag_articles', name=t.name) }}" class="tag-chip">#{{ t.name }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if documents %}
+  <section class="source-documents"><div class="source-doc-head"><span>REFERENCE</span><h5>출처·근거 문서</h5></div>{% for document in documents %}<a href="{{ document.url }}" target="_blank" rel="noopener noreferrer"><span>{{ document.label }}</span><b>원문 열기 ↗</b></a>{% endfor %}</section>
+  {% endif %}
+
+  {% if corrections %}<section class="corrections-card"><div class="source-doc-head"><span>CORRECTIONS</span><h5>정정 이력</h5></div>{% for correction in corrections %}<div><b>{{ correction.summary }}</b><p>{{ correction.detail or '편집국이 기사 내용을 수정했습니다.' }}</p><small>{{ correction.created_at }} · {{ correction.corrected_by_name }}</small></div>{% endfor %}</section>{% endif %}
+
+  {% if article.status == 'published' %}
+  <section class="editorial-qa" id="questions"><div class="source-doc-head"><span>NEWSROOM Q&amp;A</span><h5>편집국에 질문하기</h5></div><p>기사의 취재·근거·표현에 관해 질문해 주세요. 편집국 검토 후 공개 답변할 수 있습니다.</p><form method="post" action="{{ url_for('submit_editorial_question') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="article_id" value="{{ article.id }}"><input name="name" maxlength="80" placeholder="이름" value="{{ user.name if user else '' }}" required><input name="email" type="email" maxlength="120" placeholder="답변받을 이메일 (선택)"><textarea name="question" rows="3" maxlength="1000" placeholder="질문을 남겨주세요" required></textarea><button class="btn btn-outline btn-sm" type="submit">질문 접수</button></form>{% for question in questions %}<div class="qa-answer"><b>Q. {{ question.question }}</b><p><strong>편집국 답변</strong> {{ question.answer }}</p><small>{{ question.answered_at }} · {{ question.answered_by_name }}</small></div>{% endfor %}</section>
+  <div class="typo-report-box" id="typo">
+    <details>
+      <summary>오탈자를 발견하셨나요?</summary>
+      <form method="post" action="{{ url_for('report_typo', article_id=article.id) }}" class="typo-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="message" rows="2" maxlength="500" placeholder="어떤 부분이 잘못됐는지 알려주세요" required></textarea>
+        <input type="email" name="email" placeholder="답변받을 이메일(선택)">
+        <button type="submit" class="btn btn-outline btn-sm">제보하기</button>
+      </form>
+    </details>
+  </div>
+  {% endif %}
+
+  {% with ad=ad_slots.get('article_bottom_1'), ad_context='ad-slot-inline' %}{% include "_ad_slot.html" %}{% endwith %}
+
+  {% if article.status == 'published' and (prev_article or next_article) %}
+  <div class="article-pager">
+    <a href="{{ prev_article and url_for('article_detail', article_id=prev_article.id) or '#' }}" class="pager-item {{ 'disabled' if not prev_article else '' }}">
+      <span class="pager-label">← 이전 기사</span>
+      {% if prev_article %}<span class="pager-title">{{ prev_article.title }}</span>{% endif %}
+    </a>
+    <a href="{{ next_article and url_for('article_detail', article_id=next_article.id) or '#' }}" class="pager-item pager-next {{ 'disabled' if not next_article else '' }}">
+      <span class="pager-label">다음 기사 →</span>
+      {% if next_article %}<span class="pager-title">{{ next_article.title }}</span>{% endif %}
+    </a>
+  </div>
+  {% endif %}
+
+  {% if related %}
+  <div class="related-box">
+    <h5>{{ article.category }} 관련 기사</h5>
+    {% for r in related %}
+    <a href="{{ url_for('article_detail', article_id=r.id) }}" class="related-item">{{ r.title }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if article.status == 'published' %}
+  <div class="comments-box" id="comments">
+    <h5>댓글 {{ comments|length }}개</h5>
+    {% if user %}
+    <form method="post" action="{{ url_for('add_comment', article_id=article.id) }}" class="comment-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="body" rows="3" maxlength="1000" placeholder="댓글을 남겨보세요 (최대 1000자)" required></textarea>
+      <div class="comment-form-row">
+        <input type="password" name="delete_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" minlength="4" placeholder="삭제용 비밀번호 4자리" required class="comment-pin-input">
+        <button type="submit" class="btn btn-sm">댓글 등록</button>
+      </div>
+      <div class="helptext">나중에 댓글을 직접 삭제할 때 필요한 숫자 4자리입니다. 잊지 않게 기억해 두세요.</div>
+    </form>
+    {% else %}
+    <p class="empty-note"><a href="{{ url_for('login', next=request.path) }}">로그인</a> 후 댓글을 남길 수 있습니다.</p>
+    {% endif %}
+
+    {% for c in comments %}
+    <div class="comment-item">
+      <div class="comment-meta">
+        <span class="comment-name">{{ c.commenter_name }}{% if c.commenter_role in ('journalist','editor') %}<span class="pick-badge" style="margin-left:6px;">기자</span>{% endif %}</span>
+        <span class="comment-date">{{ c.created_at }}</span>
+      </div>
+      <p class="comment-body">{{ c.body }}</p>
+      <div class="comment-actions">
+        {% if user and user.id == c.user_id and user.role != 'editor' %}
+        <form method="post" action="{{ url_for('delete_comment', comment_id=c.id) }}" class="comment-delete-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="password" name="delete_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" minlength="4" placeholder="비밀번호 4자리" required class="comment-pin-input-sm">
+          <button type="submit" class="comment-delete-btn">삭제</button>
+        </form>
+        {% elif user and user.role == 'editor' %}
+        <form method="post" action="{{ url_for('delete_comment', comment_id=c.id) }}" data-confirm="댓글을 삭제하시겠습니까?" class="comment-delete-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="comment-delete-btn">삭제(모더레이션)</button>
+        </form>
+        {% endif %}
+        {% if user %}
+        <form method="post" action="{{ url_for('report_comment', comment_id=c.id) }}" data-confirm="이 댓글을 신고하시겠습니까?" class="comment-delete-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="comment-report-btn">신고</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="empty-note">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% with ad=ad_slots.get('article_bottom_2'), ad_context='ad-slot-inline' %}{% include "_ad_slot.html" %}{% endwith %}
+</article>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}'{{ query }}' 검색 결과 | 메디톡{% endblock %}
+{% block robots %}noindex, follow{% endblock %}
+{% block content %}
+<div class="wrap search-head">
+  <h1>'{{ query }}' 검색 결과</h1>
+  <div class="count">{{ results|length }}건의 기사를 찾았습니다</div>
+</div>
+<div class="wrap search-list">
+  {% if results %}
+    {% for a in results %}
+    <div class="search-row">
+      <div class="thumb">{% if a.image_filename %}<img src="{{ image_url(a.image_filename) }}" alt="{{ a.image_caption or a.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ mini_svg(a.id) | safe }}{% endif %}</div>
+      <div>
+        <span class="cat" style="font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--amber);text-transform:uppercase;">{{ a.category }}</span>
+        <h3><a href="{{ url_for('article_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+        <p>{{ a.deck }}</p>
+        <div class="meta">{{ a.author_name }} · {{ a.published_at }} · 조회 {{ a.view_count }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="empty-note">{% if query %}'{{ query }}'에 대한 검색 결과가 없습니다.{% else %}검색어를 입력해 주세요.{% endif %}</p>
+  {% endif %}
+</div>
+{% endblock %}

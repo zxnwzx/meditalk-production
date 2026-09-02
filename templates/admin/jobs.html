@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}채용정보 관리 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><h1>채용정보 관리</h1></div>
+
+<div class="admin-card" style="margin-bottom:20px;">
+  <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:14px;">새 채용정보 등록</strong>
+  <form method="post" action="{{ url_for('admin_jobs') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field"><label>회사명</label><input type="text" name="company" required></div>
+    <div class="field"><label>포지션</label><input type="text" name="position" required></div>
+    <div class="field"><label>경력 조건 (예: 경력 3~7년, 신입가능)</label><input type="text" name="experience_level" required></div>
+    <button type="submit" class="btn btn-sm">등록</button>
+  </form>
+</div>
+
+<table class="admin-table">
+  <thead><tr><th>회사명</th><th>포지션</th><th>경력조건</th><th>작업</th></tr></thead>
+  <tbody>
+    {% for j in jobs %}
+    <tr>
+      <td data-label="회사명"><strong>{{ j.company }}</strong></td>
+      <td data-label="포지션">{{ j.position }}</td>
+      <td data-label="경력조건">{{ j.experience_level }}</td>
+      <td>
+        <form method="post" action="{{ url_for('admin_jobs') }}" data-confirm="삭제하시겠습니까?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="job_id" value="{{ j.id }}">
+          <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" style="text-align:center;color:var(--ink-faint);padding:24px;">등록된 채용정보가 없습니다.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+  "name": "메디톡 — 제약·바이오 전문지",
+  "short_name": "메디톡",
+  "description": "제약·바이오 업계의 목소리를 전합니다",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0B3A5B",
+  "lang": "ko",
+  "icons": [
+    { "src": "/static/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

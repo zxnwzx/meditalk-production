@@ -1,0 +1,22 @@
+{% extends "admin/base.html" %}
+{% block title %}기자 프로필 | 메디톡{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><div><span>PUBLIC PROFILE</span><h1>기자 프로필</h1><p>공개 기사 페이지에 표시되는 프로필 정보를 관리합니다.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="admin-card reporter-profile-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section class="profile-photo-editor">
+    <div class="profile-photo-preview">
+      {% if profile and profile.avatar_filename %}<img src="{{ image_url(profile.avatar_filename) }}" alt="{{ user.name }} 기자 프로필 사진">{% else %}<span aria-hidden="true">{{ user.name[:1] }}</span>{% endif %}
+    </div>
+    <div class="profile-photo-copy"><strong>기자 프로필 사진</strong><p>기사와 기자 소개 페이지에 표시됩니다. 정사각형 JPG·PNG·WEBP, 최대 6MB를 권장합니다.</p><label class="btn btn-outline btn-sm profile-file-label" for="avatar">사진 선택</label><input id="avatar" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" class="visually-hidden"><label class="profile-remove"><input type="checkbox" name="remove_avatar" value="1"> 현재 사진 삭제</label></div>
+  </section>
+  <div class="profile-form-grid">
+    <label>전문 분야<input name="expertise" maxlength="300" value="{{ profile.expertise if profile else '' }}" placeholder="예: 항암 신약·임상개발·식약처 규제"></label>
+    <label>공개 연락 이메일<input name="contact_email" type="email" maxlength="120" value="{{ profile.contact_email if profile and profile.contact_email else '' }}" placeholder="reporter@meditalk.co.kr"></label>
+  </div>
+  <label>소개<textarea name="bio" rows="5" maxlength="1200" placeholder="독자가 알면 좋은 취재 경력과 담당 분야를 적어주세요.">{{ profile.bio if profile else '' }}</textarea></label>
+  <label>안전한 제보 링크 <span class="field-optional">선택</span><input name="tip_url" type="url" maxlength="500" value="{{ profile.tip_url if profile and profile.tip_url else '' }}" placeholder="https://..."></label>
+  <label>검증 원칙 한 줄<input name="verification_note" maxlength="400" value="{{ profile.verification_note if profile else '' }}" placeholder="예: 공개 원문과 복수 취재원을 바탕으로 검토합니다."></label>
+  <button class="btn" type="submit">프로필 저장</button>
+</form>
+{% endblock %}

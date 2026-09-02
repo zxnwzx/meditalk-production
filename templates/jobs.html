@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}채용정보 | 메디톡{% endblock %}
+{% block meta_description %}제약·바이오 업계 채용정보{% endblock %}
+{% block content %}
+<div class="wrap search-head">
+  <h1>채용정보</h1>
+  <div class="count">{{ jobs|length }}건</div>
+</div>
+<div class="wrap" style="padding-bottom:60px;">
+  {% for j in jobs %}
+  <div class="job-row" style="padding:18px 0;border-bottom:1px solid var(--line);">
+    <div>
+      <div class="jc" style="font-size:16px;">{{ j.company }}</div>
+      <div class="jt">{{ j.position }}</div>
+    </div>
+    <div class="job-tag">{{ j.experience_level }}</div>
+  </div>
+  {% else %}
+  <p class="empty-note">등록된 채용정보가 없습니다.</p>
+  {% endfor %}
+</div>
+{% endblock %}

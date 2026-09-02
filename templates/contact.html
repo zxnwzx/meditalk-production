@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}광고·제휴 문의 | 메디톡{% endblock %}
+{% block content %}
+<div class="auth-layout" style="grid-template-columns:1fr;max-width:560px;">
+  <div class="auth-wrap">
+    <h2>광고·제휴 문의</h2>
+    <p class="sub">광고 게재, 협찬, 세미나 공동주최, 취재 제보 등 편집국에 전달할 문의를 남겨주세요.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="name">담당자 성함</label>
+        <input type="text" id="name" name="name" required autofocus>
+      </div>
+      <div class="field">
+        <label for="company">회사명 (선택)</label>
+        <input type="text" id="company" name="company">
+      </div>
+      <div class="field">
+        <label for="email">이메일</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="field">
+        <label for="message">문의 내용</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+      </div>
+      <button class="btn" type="submit" style="width:100%;">문의 보내기</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

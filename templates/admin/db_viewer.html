@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% block title %}DB 뷰어 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><h1>DB 뷰어</h1></div>
+<p class="helptext" style="margin-bottom:18px;">비밀번호 해시, 댓글 삭제용 PIN 같은 민감한 값은 절대 표시되지 않습니다. 조회만 가능하고 여기서 직접 수정·삭제는 할 수 없습니다.</p>
+<div class="admin-table" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+  {% for table, cols in tables.items() %}
+  <a href="{{ url_for('admin_db_viewer_table', table=table) }}" class="admin-card" style="display:block;text-decoration:none;">
+    <strong style="font-family:var(--sans);font-weight:800;font-size:14px;color:var(--ink);">{{ table }}</strong>
+    <div class="helptext" style="margin-top:6px;">{{ counts[table] if counts[table] is not none else '조회 실패' }}건</div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}법인·팀 구독 | 메디톡{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="wrap team-page-head"><span>TEAM DESK</span><h1>법인·팀 구독</h1><p>구성원에게 공용 관심 키워드와 제약·바이오 기사 피드를 제공합니다.</p></section>
+<section class="wrap team-create-card"><h2>새 팀 공간 만들기</h2><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="name" maxlength="100" placeholder="조직명" required><input name="domain" maxlength="120" placeholder="조직 도메인 (선택, 예: company.co.kr)"><input name="seat_limit" type="number" min="2" max="100" value="5" required><button class="btn" type="submit">팀 공간 만들기</button></form></section>
+<section class="wrap team-list">{% for team in organizations %}<a href="{{ url_for('team_detail', organization_id=team.id) }}"><span>TEAM</span><h2>{{ team.name }}</h2><p>{{ team.member_count }}/{{ team.seat_limit }} 좌석 · {{ '팀 관리자' if team.membership_role == 'owner' else '구성원' }}</p></a>{% else %}<p class="empty-note">아직 참여 중인 팀이 없습니다.</p>{% endfor %}</section>
+{% endblock %}

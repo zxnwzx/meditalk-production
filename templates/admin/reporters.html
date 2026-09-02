@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% block title %}기자 계정 관리 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>기자 계정 관리</h1>
+</div>
+
+<div class="admin-card">
+  <h2 style="font-family:var(--serif);font-size:18px;margin-bottom:14px;color:var(--navy-deep);">새 계정 개설</h2>
+  <form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field">
+      <label for="name">이름</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+    <div class="field">
+      <label for="username">아이디</label>
+      <input type="text" id="username" name="username" required>
+    </div>
+    <div class="field">
+      <label for="password">초기 비밀번호</label>
+      <input type="text" id="password" name="password" required minlength="8">
+    </div>
+    <div class="field">
+      <label for="role">권한</label>
+      <select id="role" name="role">
+        <option value="journalist">기자 (작성·심사요청)</option>
+        <option value="editor">편집장 (발행·계정관리 포함)</option>
+      </select>
+    </div>
+    <button class="btn" type="submit">계정 생성</button>
+  </form>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr><th>이름</th><th>아이디</th><th>권한</th><th>가입일</th><th>작성 기사 수</th></tr>
+  </thead>
+  <tbody>
+    {% for r in reporters %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.username }}</td>
+      <td><span class="status-pill status-published">{{ '편집장' if r.role=='editor' else '기자' }}</span></td>
+      <td>{{ r.created_at }}</td>
+      <td>{{ r.article_count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

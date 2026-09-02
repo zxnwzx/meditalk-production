@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% block title %}속보 티커 설정 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head">
+  <h1>속보 티커 설정</h1>
+</div>
+
+<form method="post" action="{{ url_for('admin_ticker_settings') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="admin-card" style="margin-bottom:20px;">
+    <div class="field">
+      <label for="ticker_speed_sec">스크롤 속도 (숫자가 작을수록 빠름, 5~120초)</label>
+      <input type="number" id="ticker_speed_sec" name="ticker_speed_sec" min="5" max="120" value="{{ ticker_speed_sec }}" style="max-width:160px;">
+    </div>
+    <div class="field">
+      <label for="ticker_category">자동 노출 섹션 (아래에서 기사를 직접 고르지 않았을 때만 사용됩니다)</label>
+      <select id="ticker_category" name="ticker_category" style="max-width:240px;">
+        <option value="" {{ 'selected' if not ticker_category else '' }}>전체 섹션</option>
+        {% for cat in categories %}
+        <option value="{{ cat }}" {{ 'selected' if ticker_category==cat else '' }}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <strong style="font-family:var(--sans);font-weight:800;font-size:15px;color:var(--ink);display:block;margin-bottom:6px;">속보에 띄울 기사 직접 선택 (최대 12개)</strong>
+    <p class="helptext" style="margin-bottom:16px;">하나라도 체크하면 위 자동 섹션 설정 대신 여기서 고른 기사만 순서대로 속보에 노출됩니다. 전부 체크 해제하면 자동 방식(최신 발행순)으로 돌아갑니다.</p>
+
+    {% for cat, arts in by_category.items() %}
+    <div style="margin-bottom:18px;">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">{{ cat }}</div>
+      {% for a in arts %}
+      <label style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;color:var(--ink);border-bottom:1px solid var(--line);">
+        <input type="checkbox" name="ticker_article_ids" value="{{ a.id }}" {{ 'checked' if a.id in selected_ids else '' }}>
+        {{ a.title }}
+      </label>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-note">발행된 기사가 없습니다.</p>
+    {% endfor %}
+  </div>
+
+  <div class="row-actions" style="margin-top:20px;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">취소</a>
+    <button type="submit" class="btn">설정 저장</button>
+  </div>
+</form>
+{% endblock %}

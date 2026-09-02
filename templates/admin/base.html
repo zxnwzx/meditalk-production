@@ -1,0 +1,60 @@
+{# Design: 임상 아틀라스 — 공개 사이트와 동일한 정밀한 색·타이포그래피 원칙을 관리자 도구에도 적용한다. #}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}관리자 사이트 | 메디톡{% endblock %}</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32.png') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<meta name="theme-color" content="#0B3A5B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700;8..60,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='newsletter-v19') }}">
+</head>
+<body>
+<div class="admin-shell">
+  <aside class="admin-side">
+    <div class="brand"><img class="admin-glass-mark" src="{{ url_for('static', filename='meditok-glass-mark-v1.png') }}" alt="" aria-hidden="true"><span>메디<em>톡</em></span><small>EDITORIAL CONTROL DESK</small></div>
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}" class="{{ 'active' if active=='dashboard' else '' }}">내 기사 / 대시보드</a>
+      <a href="{{ url_for('admin_write') }}" class="{{ 'active' if active=='write' else '' }}">새 기사 작성</a>
+      <a href="{{ url_for('admin_profile') }}" class="{{ 'active' if active=='profile' else '' }}">기자 프로필</a>
+      {% if user.role == 'editor' %}
+      <a href="{{ url_for('admin_review') }}" class="{{ 'active' if active=='review' else '' }}">심사 대기 (편집)</a>
+      <a href="{{ url_for('admin_reporters') }}" class="{{ 'active' if active=='reporters' else '' }}">기자 계정 관리</a>
+      <a href="{{ url_for('admin_members') }}" class="{{ 'active' if active=='members' else '' }}">회원(독자) 관리</a>
+      <a href="{{ url_for('admin_overview') }}" class="{{ 'active' if active=='overview' else '' }}">사이트 현황</a>
+      <a href="{{ url_for('admin_analytics') }}" class="{{ 'active' if active=='analytics' else '' }}">기사·광고 성과</a>
+      <a href="{{ url_for('admin_db_viewer') }}" class="{{ 'active' if active=='dbviewer' else '' }}">DB 뷰어</a>
+      <a href="{{ url_for('admin_ticker_settings') }}" class="{{ 'active' if active=='ticker' else '' }}">속보 티커 설정</a>
+      <a href="{{ url_for('admin_ads') }}" class="{{ 'active' if active=='ads' else '' }}">광고 슬롯 관리</a>
+      <a href="{{ url_for('admin_events') }}" class="{{ 'active' if active=='events' else '' }}">세미나·행사 관리</a>
+      <a href="{{ url_for('admin_jobs') }}" class="{{ 'active' if active=='jobs' else '' }}">채용정보 관리</a>
+      <a href="{{ url_for('admin_inquiries') }}" class="{{ 'active' if active=='inquiries' else '' }}">광고·제휴 문의</a>
+      <a href="{{ url_for('admin_comment_reports') }}" class="{{ 'active' if active=='reports' else '' }}">댓글 신고함</a>
+      <a href="{{ url_for('admin_typos') }}" class="{{ 'active' if active=='typos' else '' }}">오탈자 제보함</a>
+      <a href="{{ url_for('admin_questions') }}" class="{{ 'active' if active=='questions' else '' }}">편집국 Q&amp;A</a>
+      <a href="{{ url_for('admin_newsletter_preview') }}" class="{{ 'active' if active=='newsletter' else '' }}">뉴스레터 발송</a>
+      {% endif %}
+    </nav>
+    <div class="who">
+      로그인: {{ user.name }}
+      <span class="role-tag">{{ '편집장' if user.role=='editor' else '기자' }}</span>
+      <div style="margin-top:10px;"><a href="{{ url_for('index') }}" style="color:#7FB2E8;">← 홈페이지 보기</a></div>
+      <div style="margin-top:4px;"><a href="{{ url_for('logout') }}" style="color:#B7C6E0;">로그아웃</a></div>
+    </div>
+  </aside>
+  <main class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, msg in messages %}
+        <div class="flash-{{ 'error' if category=='error' else 'msg' }}" style="margin-bottom:16px;">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block admin_content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

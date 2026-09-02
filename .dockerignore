@@ -1,0 +1,10 @@
+.git
+.pytest_cache
+__pycache__
+*.py[cod]
+*.db
+*.sqlite3
+static/uploads
+.env
+.env.production
+meditok.db

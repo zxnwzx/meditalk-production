@@ -3,23 +3,24 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PORT=8000 \
-    MEDITOK_DB_PATH=/data/meditok.db \
-    MEDITOK_UPLOAD_DIR=/data/uploads \
-    SESSION_COOKIE_SECURE=1
+    PORT=8000
 
 WORKDIR /app
 RUN addgroup --system meditalk && adduser --system --ingroup meditalk meditalk
 
-COPY meditalk-project.tar.gz /tmp/meditalk-project.tar.gz
-RUN tar -xzf /tmp/meditalk-project.tar.gz -C /app \
-    && rm /tmp/meditalk-project.tar.gz \
-    && pip install --no-cache-dir -r /app/requirements.txt \
-    && mkdir -p /data/uploads \
-    && chown -R meditalk:meditalk /app /data \
-    && chmod +x /app/docker-entrypoint.sh
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . ./
+RUN mkdir -p /data/uploads && \
+    chown -R meditalk:meditalk /app /data && \
+    chmod +x /app/docker-entrypoint.sh
 
 USER meditalk
+ENV MEDITOK_DB_PATH=/data/meditok.db \
+    MEDITOK_UPLOAD_DIR=/data/uploads \
+    SESSION_COOKIE_SECURE=1
+
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:' + os.getenv('PORT', '8000') + '/healthz', timeout=3).read()" || exit 1

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}#{{ tag.name }} | 메디톡{% endblock %}
+{% block content %}
+<div class="wrap search-head">
+  <h1>#{{ tag.name }}</h1>
+  <div class="count">{{ total }}건의 기사</div>
+</div>
+<div class="wrap search-list">
+  {% if articles %}
+    {% for a in articles %}
+    <div class="search-row">
+      <div class="thumb">{% if a.image_filename %}<img src="{{ image_url(a.image_filename) }}" alt="{{ a.image_caption or a.title }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ mini_svg(a.id) | safe }}{% endif %}</div>
+      <div>
+        <span class="cat" style="font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--amber);text-transform:uppercase;">{{ a.category }}</span>
+        <h3><a href="{{ url_for('article_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+        <p>{{ a.deck }}</p>
+        <div class="meta">{{ a.author_name }} · {{ a.published_at }} · 조회 {{ a.view_count }}</div>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="page-pager">
+      {% if page > 1 %}<a href="{{ url_for('tag_articles', name=tag.name, page=page-1) }}" class="btn btn-outline btn-sm">← 이전</a>{% endif %}
+      <span class="page-pager-num">{{ page }}페이지</span>
+      {% if has_more %}<a href="{{ url_for('tag_articles', name=tag.name, page=page+1) }}" class="btn btn-outline btn-sm">다음 →</a>{% endif %}
+    </div>
+  {% else %}
+    <p class="empty-note">이 태그가 달린 기사가 없습니다.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{# Design: 임상 아틀라스 — 정밀한 에디토리얼 뉴스룸. 모든 기존 URL, 폼 필드 및 템플릿 컨텍스트를 보존한다. #}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ site_name }} | 제약·바이오 전문지{% endblock %}</title>
+<meta name="description" content="{% block meta_description %}{{ site_tagline }} — 임상·허가·정책·기업 소식을 다루는 제약·바이오 전문지 {{ site_name }}{% endblock %}">
+<link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ request.full_path.rstrip('?') }}">
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<meta name="naver-site-verification" content="">
+<meta name="google-site-verification" content="">
+
+<meta property="og:type" content="{% block og_type %}website{% endblock %}">
+<meta property="og:site_name" content="{{ site_name }}">
+<meta property="og:title" content="{% block og_title %}{{ site_name }} — {{ site_tagline }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ site_tagline }} — 임상·허가·정책·기업 소식을 다루는 제약·바이오 전문지{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='og-image.png') }}{% endblock %}">
+<meta property="og:image:secure_url" content="{% block og_image_secure %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='og-image.png') }}{% endblock %}">
+<meta property="og:image:type" content="{% block og_image_type %}image/png{% endblock %}">
+{% block og_image_dims %}
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{% endblock %}
+<meta property="og:image:alt" content="{% block og_image_alt %}{{ site_name }} — {{ site_tagline }}{% endblock %}">
+<meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ request.full_path.rstrip('?') }}">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% block twitter_title %}{{ site_name }} — {{ site_tagline }}{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}{{ site_tagline }}{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='og-image.png') }}{% endblock %}">
+
+<link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16.png') }}">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32.png') }}">
+<link rel="icon" type="image/png" sizes="48x48" href="{{ url_for('static', filename='favicon-48.png') }}">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+<meta name="theme-color" content="#0B3A5B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="{{ site_name }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700;8..60,800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='newsletter-v19') }}">
+{% block structured_data %}
+<script type="application/ld+json" nonce="{{ csp_nonce() }}">
+{
+  "@context": "https://schema.org",
+  "@type": "NewsMediaOrganization",
+  "name": "{{ site_name }}",
+  "url": "{{ request.url_root }}",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='android-chrome-512x512.png') }}"
+  }
+}
+</script>
+{% endblock %}
+{% if ga_measurement_id %}
+<script nonce="{{ csp_nonce() }}" async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+<script nonce="{{ csp_nonce() }}">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ ga_measurement_id }}');
+</script>
+{% endif %}
+<script src="{{ url_for('static', filename='site.js') }}" defer></script>
+</head>
+<body>
+
+<div class="util-bar">
+  <div class="wrap">
+    <div class="util-left">
+      <span>{{ today }}</span>
+      <span>가입 회원 {{ member_count }}명</span>
+    </div>
+    <div class="util-right">
+      {% if user %}
+        <span>{{ user.name }}님{% if user.role != 'reader' %} · <span style="color:#8FD8B4;">{{ role_label(user.role) }}</span>{% endif %}</span>
+        <a href="{{ url_for('mypage') }}">마이페이지</a>
+        {% if user.role in ('journalist','editor') %}<a href="{{ url_for('admin_dashboard') }}">관리자 사이트</a>{% endif %}
+        <a href="{{ url_for('logout') }}">로그아웃</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">로그인</a>
+        <a href="{{ url_for('signup') }}" class="btn-subscribe">회원가입</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="brand-block">
+      <a href="{{ url_for('index') }}" class="logo" aria-label="메디톡 홈으로">
+        <img class="logo-glass-mark" src="{{ url_for('static', filename='meditok-glass-mark-v1.png') }}" alt="" aria-hidden="true">
+        <span class="logo-wordmark">메디<em>톡</em></span>
+        <span class="logo-shards" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </a>
+      <div class="tagline"><span class="tagline-kr">제약 바이오 업계의 목소리를 전하다.</span><span class="tagline-en"><b>MEDI</b><em>TALK</em> · PHARMA &amp; BIOTECH NEWS</span></div>
+    </div>
+    <div class="masthead-meta">
+      <div class="no">PHARMA &amp; BIOTECH NEWS</div>
+      <div>발행인 편집국 · 서울</div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <div class="wrap">
+    <nav class="nav-links">
+      <a href="{{ url_for('index') }}" class="{{ 'active' if not current_category else '' }}">전체</a>
+      {% for cat in categories %}
+      <a href="{{ url_for('index', category=cat) }}" class="{{ 'active' if current_category==cat else '' }}">{{ cat }}</a>
+      {% endfor %}
+    </nav>
+    <form class="nav-search-form" action="{{ url_for('search') }}" method="get">
+      <input type="search" name="q" placeholder="기업명, 성분명으로 검색" aria-label="검색">
+      <button type="submit" aria-label="검색하기">⌕</button>
+    </form>
+  </div>
+</div>
+
+<div class="ticker-strip">
+  {% if ticker_items %}
+  <div class="ticker-track" style="{% if ticker_speed_sec %}animation-duration:{{ ticker_speed_sec }}s;{% endif %}">
+    {% for it in ticker_items %}<span><a href="{{ url_for('article_detail', article_id=it.id) }}"><span class="tag-new">[{{ it.category }}]</span> {{ it.title }}</a></span>{% endfor %}
+    {% for it in ticker_items %}<span><a href="{{ url_for('article_detail', article_id=it.id) }}"><span class="tag-new">[{{ it.category }}]</span> {{ it.title }}</a></span>{% endfor %}
+  </div>
+  {% else %}
+  <div class="ticker-empty">아직 발행된 속보가 없습니다 — 관리자 사이트에서 첫 기사를 발행해 보세요.</div>
+  {% endif %}
+</div>
+
+<div class="flash">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash-{{ 'error' if category=='error' else 'msg' }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo"><img src="{{ url_for('static', filename='meditok-glass-mark-v1.png') }}" alt="" aria-hidden="true"><span>메디<em>톡</em></span></div>
+        <p class="footer-desc">제약·바이오 업계의 목소리를 전하는 전문지. 임상·허가·정책·산업 동향을 심층적으로 전합니다.</p>
+      </div>
+      <div class="footer-col">
+        <h5>섹션</h5>
+        {% for cat in categories %}<a href="{{ url_for('index', category=cat) }}">{{ cat }}</a>{% endfor %}
+      </div>
+      <div class="footer-col">
+        <h5>서비스</h5>
+        <a href="{{ url_for('signup') }}">회원가입</a>
+        <a href="{{ url_for('login') }}">로그인</a>
+        <a href="{{ url_for('search') }}">기사 검색</a>
+        <a href="{{ url_for('teams') }}">법인·팀 구독</a>
+      </div>
+      <div class="footer-col">
+        <h5>회사</h5>
+        <a href="{{ url_for('about') }}">회사소개</a>
+        <a href="{{ url_for('contact') }}">광고·제휴 문의</a>
+        <a href="{{ url_for('ethics_code') }}">편집국 윤리강령</a>
+        <a href="{{ url_for('rss_feed') }}">RSS 피드</a>
+      </div>
+      <div class="footer-col">
+        <h5>고객지원</h5>
+        <a href="{{ url_for('subscribe_info') }}">구독 안내</a>
+        <a href="{{ url_for('terms_of_service') }}">이용약관</a>
+        <a href="{{ url_for('privacy_policy') }}">개인정보처리방침</a>
+        <a href="{{ url_for('youth_policy') }}">청소년보호정책</a>
+        <a href="{{ url_for('correction_policy') }}">정정보도 안내</a>
+      </div>
+    </div>
+    <div class="footer-legal">
+      메디톡 · 발행인 편집국 · 편집인 편집국 · 청소년보호책임자 편집국<br>
+      서울특별시 · 제약·바이오 전문 미디어
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 MEDITALK. ALL RIGHTS RESERVED.</span>
+      <span><a href="{{ url_for('correction_policy') }}" style="color:inherit;">정정보도·반론보도 청구 안내</a></span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{% extends "admin/base.html" %}
+{% block title %}기사 수정 이력 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><div><div class="admin-kicker">EDITORIAL TRACE</div><h1>기사 수정 이력</h1><p class="helptext">{{ article.title }}</p></div><a class="btn btn-outline" href="{{ url_for('admin_edit', article_id=article.id) }}">기사 편집으로</a></div>
+<div class="admin-card history-current"><span>현재 상태</span><strong>{{ status_label(article.status) }}</strong><em>최근 수정 {{ article.updated_at }}</em></div>
+{% for version in versions %}
+<article class="admin-card history-card"><div class="history-head"><div><span class="history-no">이력 #{{ version.id }}</span><strong>{{ version.title }}</strong></div><span>{{ version.created_at }}</span></div><div class="history-meta"><span>{{ version.category }}</span><span>{{ status_label(version.status) }}</span><span>변경자 {{ version.changed_by_name }}</span>{% if version.change_note %}<span>메모: {{ version.change_note }}</span>{% endif %}</div><p>{{ version.deck }}</p>{% if user.role == 'editor' %}<form method="post" action="{{ url_for('admin_restore_article_version', article_id=article.id, version_id=version.id) }}" data-confirm="현재 내용은 새 이력으로 보관되고, 이 버전으로 복원됩니다. 계속하시겠습니까?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline btn-sm" type="submit">이 버전으로 복원</button></form>{% endif %}</article>
+{% else %}<div class="admin-empty">아직 저장된 수정 이력이 없습니다. 기사를 수정하면 변경 전 내용이 자동으로 보관됩니다.</div>{% endfor %}
+{% endblock %}

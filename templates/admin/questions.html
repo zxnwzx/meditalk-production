@@ -1,0 +1,6 @@
+{% extends "admin/base.html" %}
+{% block title %}편집국 Q&A | 메디톡{% endblock %}
+{% block admin_content %}
+<div class="admin-head"><div><span>NEWSROOM Q&amp;A</span><h1>편집국 질문 관리</h1><p>질문을 검토하고 독자에게 공개할 답변만 게시합니다.</p></div></div>
+<div class="admin-card questions-list">{% for q in questions %}<article class="question-admin-item"><div><span class="status-pill {{ q.status }}">{{ '답변 완료' if q.status == 'answered' else ('비공개' if q.status == 'hidden' else '검토 대기') }}</span><h3>{{ q.article_title or '일반 편집국 질문' }}</h3><p><b>{{ q.asker_name }}</b> · {{ q.asked_at }}</p><blockquote>{{ q.question }}</blockquote></div>{% if q.status == 'open' %}<form method="post" action="{{ url_for('admin_answer_question', question_id=q.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><textarea name="answer" rows="4" maxlength="2000" placeholder="근거를 포함한 편집국의 공식 답변을 입력해 주세요."></textarea><div><button class="btn btn-sm" name="status" value="answered">공개 답변</button><button class="btn btn-outline btn-sm" name="status" value="hidden">비공개 처리</button></div></form>{% else %}<p class="helptext">{{ q.answer or '비공개 처리됨' }}</p>{% endif %}</article>{% else %}<p class="empty-note">접수된 질문이 없습니다.</p>{% endfor %}</div>
+{% endblock %}

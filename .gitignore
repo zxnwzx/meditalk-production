@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.production.example
+*.db
+*.db-*
+__pycache__/
+.pytest_cache/
+*.pyc
+static/uploads/*

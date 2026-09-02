@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+{% block title %}광고 캠페인 관리 | 메디톡 관리자{% endblock %}
+{% block admin_content %}
+<div class="admin-head ad-page-head">
+  <div>
+    <div class="admin-kicker">REVENUE DESK</div>
+    <h1>광고 캠페인 관리</h1>
+    <p class="helptext">광고 이미지를 한 번 등록하고, 홈·기사의 여러 위치를 선택해 즉시 교체할 수 있습니다. 같은 자리를 새 캠페인에 선택하면 이전 광고는 자동으로 대체됩니다.</p>
+  </div>
+</div>
+
+<section class="ad-slot-map admin-card">
+  <div class="ad-map-head"><div><strong>노출 위치 지도</strong><p class="helptext">각 위치의 권장 규격과 현재 사용 상태를 한눈에 확인하세요.</p></div><span>{{ slots|length }}개 운영 가능</span></div>
+  <div class="slot-map-grid">
+    {% for slot in slots %}
+    <a class="slot-map-item {{ 'occupied' if slot.campaign_id else '' }}" href="#{{ slot.key }}">
+      <span>{{ slot.group }}</span><strong>{{ slot.name }}</strong><small>{{ slot.recommended_size }}</small>
+      <em>{{ '캠페인 #' ~ slot.campaign_id ~ ' 운영 중' if slot.campaign_id else '비어 있음' }}</em>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="admin-card ad-create-card">
+  <div class="ad-form-head"><div><div class="admin-kicker">NEW CAMPAIGN</div><h2>새 광고 등록</h2></div><span>JPG · PNG · WEBP · GIF</span></div>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('admin_ads') }}" class="campaign-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="campaign-form-top">
+      <div class="field"><label>캠페인 이름</label><input name="name" maxlength="100" required placeholder="예: 9월 임상 포럼 캠페인"></div>
+      <div class="field"><label>광고주</label><input name="sponsor" maxlength="100" placeholder="예: 메디톡 파트너"></div>
+      <div class="field"><label>연결 주소</label><input name="target_url" type="url" maxlength="500" placeholder="https://example.com"></div>
+      <div class="field"><label>광고 파일</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required><small class="field-help">GIF 애니메이션 지원 · 최대 6MB · 긴 변 1600px · 최대 180프레임</small></div>
+      <div class="field"><label>시작일</label><input name="starts_at" type="date"></div>
+      <div class="field"><label>종료일</label><input name="ends_at" type="date"></div>
+    </div>
+    <fieldset class="slot-choice"><legend>노출할 광고 위치 선택 <span>복수 선택 가능</span></legend><div class="slot-choice-grid">
+      {% for slot in slots %}<label id="{{ slot.key }}"><input type="checkbox" name="slot_keys" value="{{ slot.key }}"><span><small>{{ slot.group }} · {{ slot.recommended_size }}</small><strong>{{ slot.name }}</strong><em>{{ slot.placement }}</em></span></label>{% endfor %}
+    </div></fieldset>
+    <div class="row-actions"><button type="submit" class="btn">캠페인 등록 및 위치 반영</button></div>
+  </form>
+</section>
+
+<section class="campaign-list">
+  <div class="admin-head compact"><h2>등록된 캠페인</h2><span class="helptext">이미지를 바꾸거나 위치를 다시 선택하면 기존 노출이 즉시 갱신됩니다.</span></div>
+  {% for campaign in campaigns %}
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('admin_ads') }}" class="admin-card campaign-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="campaign_id" value="{{ campaign.id }}">
+    <div class="campaign-preview"><img src="{{ image_url(campaign.image_filename) }}" alt="{{ campaign.name }} 광고"></div>
+    <div class="campaign-editor">
+      <div class="campaign-state"><span class="state-dot {{ 'on' if campaign.is_active else '' }}"></span>{{ '운영 중' if campaign.is_active else '일시 정지' }} · 최근 저장 {{ campaign.updated_at }}</div>
+      <div class="campaign-form-top compact"><div class="field"><label>캠페인 이름</label><input name="name" maxlength="100" required value="{{ campaign.name }}"></div><div class="field"><label>광고주</label><input name="sponsor" maxlength="100" value="{{ campaign.sponsor or '' }}"></div><div class="field"><label>연결 주소</label><input name="target_url" type="url" maxlength="500" value="{{ campaign.target_url or '' }}"></div><div class="field"><label>광고 파일 교체</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><small class="field-help">GIF 애니메이션 지원 · 원본 움직임 유지</small></div><div class="field"><label>시작일</label><input name="starts_at" type="date" value="{{ campaign.starts_at or '' }}"></div><div class="field"><label>종료일</label><input name="ends_at" type="date" value="{{ campaign.ends_at or '' }}"></div></div>
+      <fieldset class="slot-choice inline"><legend>노출 위치</legend><div class="slot-choice-grid">{% for slot in slots %}<label><input type="checkbox" name="slot_keys" value="{{ slot.key }}" {{ 'checked' if slot.key in campaign.slot_keys else '' }}><span><small>{{ slot.group }} · {{ slot.recommended_size }}</small><strong>{{ slot.name }}</strong><em>{{ slot.placement }}</em></span></label>{% endfor %}</div></fieldset>
+      <div class="row-actions"><button type="submit" class="btn btn-outline">변경 저장</button><button type="submit" class="btn btn-outline" name="action" value="toggle"><input type="hidden" name="is_active" value="{{ 0 if campaign.is_active else 1 }}">{{ '일시 정지' if campaign.is_active else '활성화' }}</button><button type="submit" class="btn btn-danger" name="action" value="delete" data-confirm="이 광고 캠페인과 성과 기록을 삭제합니다. 계속하시겠습니까?">삭제</button></div>
+    </div>
+  </form>
+  {% else %}<div class="admin-empty">등록된 광고가 없습니다. 위에서 광고 이미지와 위치를 선택해 첫 캠페인을 등록해 주세요.</div>{% endfor %}
+</section>
+{% endblock %}
