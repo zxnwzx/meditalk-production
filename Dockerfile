@@ -11,13 +11,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 RUN addgroup --system meditalk && adduser --system --ingroup meditalk meditalk
 
-COPY meditalk-project.tar.gz /tmp/meditalk-project.tar.gz
-RUN tar -xzf /tmp/meditalk-project.tar.gz -C /app \
-    && rm /tmp/meditalk-project.tar.gz \
-    && pip install --no-cache-dir -r /app/requirements.txt \
-    && mkdir -p /data/uploads \
-    && chown -R meditalk:meditalk /app /data \
-    && chmod +x /app/docker-entrypoint.sh
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . ./
+RUN mkdir -p /data/uploads && \
+    chown -R meditalk:meditalk /app /data && \
+    chmod +x /app/docker-entrypoint.sh
 
 USER meditalk
 EXPOSE 8000
